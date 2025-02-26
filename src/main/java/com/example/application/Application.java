@@ -22,21 +22,10 @@ import org.springframework.context.annotation.Bean;
 @Theme(value = "my-app", variant = Lumo.DARK)
 public class Application implements AppShellConfigurator {
 
+    // Note, you should probably start TestApplication class form the src/test/java directory
+    // instead! That starts a PostgreSQL container for testing purposes and populates some test data
+    // This is for deployment/production time
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-    }
-    @Bean
-    SqlDataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource,
-            SqlInitializationProperties properties, SampleBookRepository repository) {
-        // This bean ensures the database is only initialized when empty
-        return new SqlDataSourceScriptDatabaseInitializer(dataSource, properties) {
-            @Override
-            public boolean initializeDatabase() {
-                if (repository.count() == 0L) {
-                    return super.initializeDatabase();
-                }
-                return false;
-            }
-        };
     }
 }
