@@ -1,41 +1,31 @@
-# PathToPasskeys
+# PathToPasskeys - an example to get rid of ancient username-password authentication
 
-This project can be used as a starting point to create your own Vaadin application with Spring Boot.
-It contains all the necessary configuration and some placeholder files to get you started.
+This projects shows how to derive a "standard app" (Spring Boot, Spring Security, Vaadin, JPA, PostgreSQL and username-password style authentication) to utilize passkeys, because that's what
+we should only use in 2025. Even if your passwords would be correctly hashed and salted in the DB, the greatest problem of password based logins, the user, is hard to get rid of.
+
+The final step in the project no more supports username-password authentication, but only passkeys and one time tokens as a fallback. When modernizing your app, you probably wish to support them both for a while. See the [commit timeline for the steps I did](https://github.com/mstahv/pathtopasskeys/commits/main/) (and check out them if you want to inspect them locally in IDE). Roughly the steps were:
+
+ * A dummy project downloaded from start.vaadin.com
+ * Same sanitations like using TestContainers for easier development/testing and added a Profile view to e.g. change the password.
+ * Add OTT (one time token) support to the project. There is a high chance you have this already e.g. to reset passwords. If you are starting from scratch today, the optimal setup is probably to have only passkeys and OTT support as a fallback (and for user registration process).
+   * Add DB table for storing OTTs and map them to the user.
+   * Add required Spring Security beans and configuration.
+ * Add WebAuthn support to the project.
+   *  Add DB table for storing passkeys and map them to the user.
+   *  Add required Spring Security beans and configuration. There are some that are require for a production ready setup.
+   *  Added functionality to Profile view to register passkeys (you can have many of course) and to remove them.
+   * Added a button to the login view to initiate login using a passkey.
+ * Remove username-password authentication. The superclass of LoginView chages altogether as it designed for "form based login" only. This is the final step in the project. You might want to keep it for a while, but in the end, you should get rid of them for simplicity!
+
+See also my [year-old post about passkeys](https://vaadin.com/blog/forget-passwords-accessing-webauthn-api-with-vaadin). Compared to that example, this now utilises Spring Security and WebAuthn4J (this was not supported year ago) instead of directly implementing the WebAuthn with Yubico's library.
 
 ## Running the application
 
-Open the project in an IDE. You can download the [IntelliJ community edition](https://www.jetbrains.com/idea/download) if you do not have a suitable IDE already.
-Once opened in the IDE, locate the `Application` class and run the main method using "Debug".
+Open the project in an IDE. Once opened in the IDE, locate the `TestApplication` class (from `src/test/java`) and run the main method using "Debug". This will start the Spring Boot application and initialize PostgreSQL database using TestContainers.
 
-For more information on installing in various IDEs, see [how to import Vaadin projects to different IDEs](https://vaadin.com/docs/latest/getting-started/import).
+The app opens to http://localhost:8080. You can login with OTT method first with "user" or "admin" and then register passkeys to them. After that, you can login with passkeys.
 
-If you install the Vaadin plugin for IntelliJ, you should instead launch the `Application` class using "Debug using HotswapAgent" to see updates in the Java code immediately reflected in the browser.
-
-## Deploying to Production
-
-The project is a standard Maven project. To create a production build, call 
-
-```
-./mvnw clean package -Pproduction
-```
-
-If you have Maven globally installed, you can replace `./mvnw` with `mvn`.
-
-This will build a JAR file with all the dependencies and front-end resources,ready to be run. The file can be found in the `target` folder after the build completes.
-You then launch the application using 
-```
-java -jar target/my-app-1.0-SNAPSHOT.jar
-```
-
-## Project structure
-
-- `MainLayout.java` in `src/main/java` contains the navigation setup (i.e., the
-  side/top bar and the main menu). This setup uses
-  [App Layout](https://vaadin.com/docs/components/app-layout).
-- `views` package in `src/main/java` contains the server-side Java views of your application.
-- `views` folder in `src/main/frontend` contains the client-side JavaScript views of your application.
-- `themes` folder in `src/main/frontend` contains the custom CSS styles.
+TIP: You can use [the EntityExplorer](https://github.com/viritin/entityexplorer) mapped to http://localhost:8080/entityexplorer/ in test runs to inspect the database state during the hacking (development time tooling so no access control configured for that). Note that even though the last step don't support username-password authentication anymore, I left them to the DB because I'm lazy and didn't want to create a new set of test data dump 🤓
 
 ## Useful links
 
