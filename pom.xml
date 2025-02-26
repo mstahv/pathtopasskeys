@@ -79,6 +79,18 @@
             <artifactId>spring-boot-devtools</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- A "DB admin" tool working at JPA level to see what is happening
+             https://github.com/viritin/entityexplorer
+             Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
+         -->
+        <dependency>
+            <groupId>in.virit.entityexplorer</groupId>
+            <artifactId>entity-explorer-vaadin</artifactId>
+            <version>0.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
