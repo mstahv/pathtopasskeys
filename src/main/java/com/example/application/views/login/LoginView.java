@@ -1,8 +1,10 @@
 package com.example.application.views.login;
 
 import com.example.application.security.AuthenticatedUser;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -18,7 +20,7 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
     private final AuthenticatedUser authenticatedUser;
 
-    public LoginView(AuthenticatedUser authenticatedUser) {
+    public LoginView(AuthenticatedUser authenticatedUser, OttButton ottButton) {
         this.authenticatedUser = authenticatedUser;
         setAction(RouteUtil.getRoutePath(VaadinService.getCurrent().getContext(), getClass()));
 
@@ -30,6 +32,12 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         setI18n(i18n);
 
         setForgotPasswordButtonVisible(false);
+
+        getFooter().add(new VerticalLayout(){{
+            add(new Paragraph("Problems signing in? Try this:"));
+            add(ottButton);
+            setAlignItems(Alignment.CENTER);
+        }});
         setOpened(true);
     }
 
