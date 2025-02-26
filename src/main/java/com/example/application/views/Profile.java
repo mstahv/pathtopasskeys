@@ -44,29 +44,6 @@ public class Profile extends VerticalLayout {
         add(new H3("Your Roles:"));
         user.getRoles().forEach(role -> add(new Paragraph(role.name())));
 
-        add(new H3("Change password:"));
-
-        var newPassword = new PasswordField("New password");
-        var newPassword2 = new PasswordField("Repeat password");
-        add(
-                newPassword,
-                newPassword2,
-                new Button("Change password") {{
-                    addClickListener(e -> {
-                        if (newPassword.getValue().equals(newPassword2.getValue())) {
-                            // Change password
-                            userService.changePassword(user, newPassword.getValue());
-                            VNotification.prominent("Password changed!");
-                            newPassword.clear();
-                            newPassword2.clear();
-                        } else {
-                            // Show error
-                            VNotification.prominent("Passwords do not match!");
-                        }
-                    });
-                }}
-        );
-
         add(new H3("Passkeys:"));
 
         List<WebAuthnRecord> passkeys = authenticatedUser.getPasskeys();

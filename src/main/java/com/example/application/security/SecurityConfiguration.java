@@ -8,8 +8,6 @@ import org.springframework.security.authentication.ott.InMemoryOneTimeTokenServi
 import org.springframework.security.authentication.ott.OneTimeTokenService;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.ott.OneTimeTokenGenerationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialRpEntity;
@@ -25,11 +23,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration extends VaadinWebSecurity {
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -53,6 +46,9 @@ public class SecurityConfiguration extends VaadinWebSecurity {
                 new AntPathRequestMatcher("/webauthn/**"),new AntPathRequestMatcher("/login/webauthn")));
 
         super.configure(http);
+        // TODO as this example no more uses "form based login" (aka username/password)
+        // you might want to craft a super class that don't configure it.
+        // (Password encoder is not set, so probably non-functional anyways, but didn't test)
         setLoginView(http, LoginView.class);
     }
 

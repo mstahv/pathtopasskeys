@@ -13,11 +13,8 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository repository;
-    private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repository) {
         this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<User> get(Long id) {
@@ -44,8 +41,4 @@ public class UserService {
         return (int) repository.count();
     }
 
-    public void changePassword(User user, String newPasswordValue) {
-        user.setHashedPassword(passwordEncoder.encode(newPasswordValue));
-        repository.save(user);
-    }
 }

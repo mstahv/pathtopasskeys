@@ -45,6 +45,14 @@ public class User extends AbstractEntity {
     public void setName(String name) {
         this.name = name;
     }
+
+    /**
+     *
+     * @return the hashed password from the history of computer science
+     * @deprecated use passkeys/webauthn instead, it is 2025!! Left this hanging
+     * into the example os I don't need to change the test data sql dump 🤓
+     */
+    @Deprecated(forRemoval = true)
     public String getHashedPassword() {
         return hashedPassword;
     }
