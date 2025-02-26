@@ -6,15 +6,18 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<User> get(Long id) {
@@ -41,4 +44,8 @@ public class UserService {
         return (int) repository.count();
     }
 
+    public void changePassword(User user, String newPasswordValue) {
+        user.setHashedPassword(passwordEncoder.encode(newPasswordValue));
+        repository.save(user);
+    }
 }
