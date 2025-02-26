@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.Set;
 
@@ -25,6 +26,12 @@ public class User extends AbstractEntity {
     @Lob
     @Column(length = 1000000)
     private byte[] profilePicture;
+
+    @OneToMany(mappedBy = "user")
+    private Set<WebAuthnRecord> webAuthnRecords;
+
+    @Column(columnDefinition="bytea")
+    private byte[] webAuthnId;
 
     public String getUsername() {
         return username;
@@ -56,5 +63,16 @@ public class User extends AbstractEntity {
     public void setProfilePicture(byte[] profilePicture) {
         this.profilePicture = profilePicture;
     }
-
+    public Set<WebAuthnRecord> getWebAuthnRecords() {
+        return webAuthnRecords;
+    }
+    public void setWebAuthnRecords(Set<WebAuthnRecord> webAuthnRecords) {
+        this.webAuthnRecords = webAuthnRecords;
+    }
+    public byte[] getWebAuthnId() {
+        return webAuthnId;
+    }
+    public void setWebAuthnId(byte[] webAuthnId) {
+        this.webAuthnId = webAuthnId;
+    }
 }

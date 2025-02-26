@@ -12,6 +12,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.ott.OneTimeTokenGenerationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.webauthn.api.PublicKeyCredentialRpEntity;
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+import org.springframework.security.web.webauthn.management.WebAuthnRelyingPartyOperations;
+import org.springframework.security.web.webauthn.management.Webauthn4JRelyingPartyOperations;
+
+import java.util.Set;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -36,6 +43,15 @@ public class SecurityConfiguration extends VaadinWebSecurity {
 
         http.oneTimeTokenLogin(withDefaults());
 
+        http.webAuthn(withDefaults());
+        // Allow the webauthn endpoints to be accessed without authentication,
+        // used in login process
+        // TODO refactor the login process to work like the registration (skip the default filters)
+        http.authorizeHttpRequests(
+                authorize -> authorize.requestMatchers(new AntPathRequestMatcher("/webauthn/**")).permitAll());
+        http.csrf(cfg -> cfg.ignoringRequestMatchers(
+                new AntPathRequestMatcher("/webauthn/**"),new AntPathRequestMatcher("/login/webauthn")));
+
         super.configure(http);
         setLoginView(http, LoginView.class);
     }
@@ -52,5 +68,12 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return new InMemoryOneTimeTokenService();
     }
 
+    @Bean public WebAuthnRelyingPartyOperations relyingPartyOperations(PublicKeyCredentialUserEntityRepository userEntities, UserCredentialRepository userCredentials) {
+        // Extends these so that they work for your (e.g. with deployment URL that the browser sees)
+        return new Webauthn4JRelyingPartyOperations(userEntities, userCredentials,
+                PublicKeyCredentialRpEntity.builder().id(
+                                "localhost")
+                        .name("}> WebAuthn + Spring Security Demo").build(), Set.of("http://localhost:8080"));
+    }
 
 }

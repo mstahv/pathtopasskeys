@@ -34,6 +34,7 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         setForgotPasswordButtonVisible(false);
 
         getFooter().add(new VerticalLayout(){{
+            add(new LoginWithPasskeyButton());
             add(new Paragraph("Problems signing in? Try this:"));
             add(ottButton);
             setAlignItems(Alignment.CENTER);
