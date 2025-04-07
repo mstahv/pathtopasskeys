@@ -2,6 +2,7 @@ package com.example.application.security;
 
 import com.example.application.views.login.LoginView;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ott.InMemoryOneTimeTokenService;
@@ -64,12 +65,22 @@ public class SecurityConfiguration extends VaadinWebSecurity {
         return new InMemoryOneTimeTokenService();
     }
 
-    @Bean public WebAuthnRelyingPartyOperations relyingPartyOperations(PublicKeyCredentialUserEntityRepository userEntities, UserCredentialRepository userCredentials) {
-        // Extends these so that they work for your (e.g. with deployment URL that the browser sees)
+    /*
+     * webauthnId (~ domain name), and webauthnOrigin are drawing in from application.properties,
+     * so that for TestApplication (used for local development) you get the value from src/test/resources.
+     * Alternatively you could use e.g. Spring profiles or environment variables to configure suitable
+     * values for both testing and production deployments.
+     */
+    @Bean public WebAuthnRelyingPartyOperations relyingPartyOperations(
+            PublicKeyCredentialUserEntityRepository userEntities,
+            UserCredentialRepository userCredentials,
+            @Value("${webauthn.id}") String webauthnId,
+            @Value("${webauthn.origin}") String webauthnOrigin) {
         return new Webauthn4JRelyingPartyOperations(userEntities, userCredentials,
-                PublicKeyCredentialRpEntity.builder().id(
-                                "localhost")
-                        .name("}> WebAuthn + Spring Security Demo").build(), Set.of("http://localhost:8080"));
+                PublicKeyCredentialRpEntity.builder()
+                        .id(webauthnId)
+                        .name("}> WebAuthn + Spring Security Demo").build(),
+                Set.of(webauthnOrigin));
     }
 
 }
