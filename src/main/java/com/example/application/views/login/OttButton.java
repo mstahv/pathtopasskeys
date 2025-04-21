@@ -2,6 +2,7 @@ package com.example.application.views.login;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.spring.annotation.SpringComponent;
@@ -30,6 +31,7 @@ public class OttButton extends Button {
         super("Request One-Time Token");
         addClickListener(e -> {
             Dialog enterYourUsername = new Dialog("Enter your username") {{
+                add(new Paragraph("Test app hint: there are users with username 'user' and 'admin' by default."));
                 var username = new TextField("Username");
                 username.focus();
                 add(username);
