@@ -10,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+import java.nio.ByteBuffer;
 import java.util.Set;
 
 @Entity
@@ -29,9 +31,6 @@ public class User extends AbstractEntity {
 
     @OneToMany(mappedBy = "user")
     private Set<WebAuthnRecord> webAuthnRecords;
-
-    @Column(columnDefinition="bytea")
-    private byte[] webAuthnId;
 
     public String getUsername() {
         return username;
@@ -77,10 +76,8 @@ public class User extends AbstractEntity {
     public void setWebAuthnRecords(Set<WebAuthnRecord> webAuthnRecords) {
         this.webAuthnRecords = webAuthnRecords;
     }
+
     public byte[] getWebAuthnId() {
-        return webAuthnId;
-    }
-    public void setWebAuthnId(byte[] webAuthnId) {
-        this.webAuthnId = webAuthnId;
+        return ByteBuffer.wrap(new byte[8]).putLong(getId()).array();
     }
 }

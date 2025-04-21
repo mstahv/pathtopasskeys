@@ -8,6 +8,7 @@ import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEnti
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.stereotype.Service;
 
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 /**
@@ -36,15 +37,12 @@ public class WebAuthnPublicKeyCredentialUserEntityRepositoryImpl implements Publ
 
     @Override
     public PublicKeyCredentialUserEntity findById(Bytes id) {
-        //  Bytes is essentially just id with rat byte[], but SpringSecurity/WebAuthn4J uses
-        //  their custom Bytes for some reason...
-        Optional<User> byUsername = userRepository.findByWebAuthnId(id.getBytes());
+
+        long primaryKey = ByteBuffer.wrap(id.getBytes()).getLong();
+        Optional<User> byUsername = userRepository.findById(primaryKey);
 
         if (byUsername.isPresent()) {
             User user = byUsername.get();
-            if (user.getWebAuthnId() == null) {
-                return null;
-            }
             // We can't make User directly implement PublicKeyCredentialUserEntity,
             // so we need to map it here.
             return new PublicKeyCredentialUserEntity() {
@@ -73,9 +71,6 @@ public class WebAuthnPublicKeyCredentialUserEntityRepositoryImpl implements Publ
 
         if (byUsername.isPresent()) {
             User user = byUsername.get();
-            if (user.getWebAuthnId() == null) {
-                return null;
-            }
             // Ideally User entity would implement this (less code would be needed) to handle different
             // types of principal types (this will be used as such when logging in with passkey, User otherwise)
             return new PublicKeyCredentialUserEntity() {
@@ -100,13 +95,7 @@ public class WebAuthnPublicKeyCredentialUserEntityRepositoryImpl implements Publ
 
     @Override
     public void save(PublicKeyCredentialUserEntity userEntity) {
-        // Creates a mapping from the user entity to the WebAuthn id
-        Optional<User> byUsername = userRepository.findByUsername(userEntity.getName());
-        if (byUsername.isPresent()) {
-            User user = byUsername.get();
-            user.setWebAuthnId(userEntity.getId().getBytes());
-            userRepository.save(user);
-        }
+        // NOOP, this is not used as we are using primary key as webAuthn id
     }
 
     @Override
@@ -114,10 +103,6 @@ public class WebAuthnPublicKeyCredentialUserEntityRepositoryImpl implements Publ
         // No idea where this would be used, implemented anyways...
         webAuthnRecordRepository.findByCredentialId(credentialId.getBytes()).ifPresent(entity -> {
             webAuthnRecordRepository.delete(entity);
-        });
-        userRepository.findByWebAuthnId(credentialId.getBytes()).ifPresent(user -> {
-            user.setWebAuthnId(null);
-            userRepository.save(user);
         });
     }
 

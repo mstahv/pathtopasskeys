@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.annotation.SessionScope;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +62,10 @@ public class AuthenticatedUser {
             // In case of WebAuthn authentication, principal is PublicKeyCredentialUserEntity
             // See WebAuthnPublicKeyCredentialUserEntityRepositoryImpl
             return authenticationContext.getAuthenticatedUser(PublicKeyCredentialUserEntity.class)
-                    .flatMap(userEntity -> userRepository.findByWebAuthnId(userEntity.getId().getBytes()));
+                    .flatMap(userEntity -> {
+                        long primaryKey = ByteBuffer.wrap(userEntity.getId().getBytes()).getLong();
+                        return userRepository.findById(primaryKey);
+                    });
         }
     }
 
