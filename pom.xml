@@ -65,7 +65,7 @@
      https://github.com/viritin/entityexplorer
      Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
 
-     ** EntityExplorer Needs to migrated to Spring 4 and @AnonymousAllowed added to TopLayout **
+     EntityExplorer Needs to migrated to Spring 4 and @AnonymousAllowed added to TopLayout
  -->
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
