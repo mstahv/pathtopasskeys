@@ -65,7 +65,7 @@
      https://github.com/viritin/entityexplorer
      Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
 
-     EntityExplorer Needs to be migrated to Vaadin 25 and Spring-Boot 4 and security annotation @AnonymousAllowed added to TopLayout (MainLayout)
+     EntityExplorer needs to be migrated to Vaadin 25 and Spring-Boot 4 and security annotation @AnonymousAllowed added to TopLayout (MainLayout)
  -->
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
