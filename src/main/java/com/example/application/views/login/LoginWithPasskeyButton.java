@@ -11,6 +11,7 @@ public class LoginWithPasskeyButton extends Button {
         addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         AuthenticatedUser.loadWebauthJs();
         addClickListener(e -> {
+            System.out.println("LOGGIN WITh Passkey");
             UI.getCurrent().getPage().executeJs("window.authenticateOrError();");
         });
     }
