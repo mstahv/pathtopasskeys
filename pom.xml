@@ -65,7 +65,7 @@
      https://github.com/viritin/entityexplorer
      Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
 
-     ** EntityExplorer Needs to migrated to Spring 4. This version is not compatible.**
+     ** EntityExplorer Needs to migrated to Vaadin 25 and Spring-Boot 4. Current version is not compatible.**
  -->
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
