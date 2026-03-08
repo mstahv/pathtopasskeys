@@ -58,20 +58,36 @@
         <dependency>
             <groupId>in.virit</groupId>
             <artifactId>viritin</artifactId>
-            <version>3.1.4</version>
+            <version>3.2.0</version>
         </dependency>
 
         <!-- A "DB admin" tool working at JPA level to see what is happening
      https://github.com/viritin/entityexplorer
      Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
 
-     EntityExplorer needs to be migrated to Vaadin 25 and Spring-Boot 4 and security annotation @AnonymousAllowed added to TopLayout (MainLayout)
+     ** EntityExplorer Needs to migrated to Spring 4 and @AnonymousAllowed added to TopLayout **
  -->
+<!--        <dependency>-->
+<!--            <groupId>in.virit.entityexplorer</groupId>-->
+<!--            <artifactId>entity-explorer-vaadin</artifactId>-->
+<!--            <version>0.0.4</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>in.virit.entityexplorer</groupId>
-            <artifactId>entity-explorer-vaadin</artifactId>
-            <version>0.0.4</version>
-            <scope>test</scope>
+            <groupId>org.meddataware</groupId>
+            <artifactId>SPXEntityExplorer</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.meddataware</groupId>
+            <artifactId>SPXEntityExplorerBase</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.meddataware</groupId>
+            <artifactId>SPXEntityExplorerVaadin</artifactId>
+            <version>1.0</version>
         </dependency>
 
         <!-- JUnit 5 testing-->
@@ -199,4 +215,29 @@
             </build>
         </profile>
     </profiles>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>vaadin-directory</id>
+            <url>https://maven.vaadin.com/vaadin-addons</url>
+        </repository>
+        <repository>
+            <id>internal</id>
+            <name>Archiva Managed Internal Repository</name>
+            <url>http://220.239.24.162:8080/repository/internal</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

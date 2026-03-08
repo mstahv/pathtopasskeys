@@ -10,6 +10,7 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashSet;
 
 @Entity
@@ -48,8 +49,9 @@ public class WebAuthnRecord extends AbstractEntity {
 
     public CredentialRecord asCredentialRecord() {
         // ideally this would implement CredentialRecord, but not tempting looking interface for JPA
-        JsonNode jsonNode = jm.readTree(recordJson);;
+        JsonNode jsonNode = jm.readTree(recordJson);
 
+        String publickey = jsonNode.get("publicKey").get("bytes").asString();
         String attestationObject = jsonNode.get("attestationObject").get("bytes").asString();
         String attestationClientDataJSON = jsonNode.get("attestationClientDataJSON").get("bytes").asString();
         String created = jsonNode.get("created").asString();
@@ -65,11 +67,11 @@ public class WebAuthnRecord extends AbstractEntity {
                 .credentialId(new Bytes(credentialId))
                 .userEntityUserId(new Bytes(userEntityUserId))
                 .signatureCount(jsonNode.get("signatureCount").asInt())
-                .attestationObject(new Bytes(attestationObject.getBytes()))
+                .attestationObject(Bytes.fromBase64(attestationObject))
                 .backupEligible(jsonNode.get("backupEligible").asBoolean())
-                .attestationClientDataJSON(new Bytes(attestationClientDataJSON.getBytes()))
+                .attestationClientDataJSON(Bytes.fromBase64(attestationClientDataJSON))
                 .backupState(jsonNode.get("backupState").asBoolean())
-                .publicKey(() -> Bytes.fromBase64(jsonNode.get("publicKey").asString()).getBytes())
+                .publicKey(() -> Bytes.fromBase64(publickey).getBytes())
                 .transports(transports)
                 .lastUsed(Instant.parse(lastUsed))
                 .created(Instant.parse(created))

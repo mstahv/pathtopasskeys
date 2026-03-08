@@ -1,9 +1,9 @@
 package com.example.application.security;
 
-import com.example.application.data.User;
 import com.example.application.data.UserRepository;
 import com.example.application.data.WebAuthnRecord;
 import com.example.application.data.WebAuthnRecordRepository;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.webauthn.api.Bytes;
@@ -12,6 +12,7 @@ import org.springframework.security.web.webauthn.management.UserCredentialReposi
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -49,10 +50,9 @@ public class WebAuthnUserCredentialRepositoryImpl implements UserCredentialRepos
 
             // find the current User via SecurityContext (one most be logged in to save new credential)
             SecurityContext context = SecurityContextHolder.getContext();
-            org.springframework.security.core.userdetails.User d = (org.springframework.security.core.userdetails.User) context.getAuthentication().getPrincipal();
-            User user = userRepository.findByUsername(d.getUsername()).get();
+            org.springframework.security.core.userdetails.User d = (org.springframework.security.core.userdetails.User) Objects.requireNonNull(context.getAuthentication()).getPrincipal();
             // this is kind of redundant to userEntityId, but I'm a lazy JPA developer...
-            record.user = user;
+            record.user = userRepository.findByUsername(Objects.requireNonNull(d).getUsername()).orElse(null);
             webAuthnRecordRepository.save(record);
         } else {
             // update while authenticating, find via userEntityUserId
@@ -66,14 +66,11 @@ public class WebAuthnUserCredentialRepositoryImpl implements UserCredentialRepos
     public CredentialRecord findByCredentialId(Bytes credentialId) {
         // This is used when authenticating
         Optional<WebAuthnRecord> byCredentialId = webAuthnRecordRepository.findByCredentialId(credentialId.getBytes());
-        if (byCredentialId.isEmpty()) {
-            return null;
-        } else {
-            return byCredentialId.get().asCredentialRecord();
-        }
+        return byCredentialId.map(WebAuthnRecord::asCredentialRecord).orElse(null);
     }
 
     @Override
+    @NonNull
     public List<CredentialRecord> findByUserId(Bytes userId) {
         List<WebAuthnRecord> byUserEntityUserId = webAuthnRecordRepository.findByUserEntityUserId(userId.getBytes());
         return byUserEntityUserId.stream().map(WebAuthnRecord::asCredentialRecord).toList();
