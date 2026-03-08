@@ -65,29 +65,13 @@
      https://github.com/viritin/entityexplorer
      Maps to /entityexplorer/ URL in the app (when launched via src/test/java/
 
-     ** EntityExplorer Needs to migrated to Spring 4 and @AnonymousAllowed added to TopLayout **
+     ** EntityExplorer Needs to migrated to Spring 4. This version is not compatible.**
  -->
-<!--        <dependency>-->
-<!--            <groupId>in.virit.entityexplorer</groupId>-->
-<!--            <artifactId>entity-explorer-vaadin</artifactId>-->
-<!--            <version>0.0.4</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-
         <dependency>
-            <groupId>org.meddataware</groupId>
-            <artifactId>SPXEntityExplorer</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.meddataware</groupId>
-            <artifactId>SPXEntityExplorerBase</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.meddataware</groupId>
-            <artifactId>SPXEntityExplorerVaadin</artifactId>
-            <version>1.0</version>
+            <groupId>in.virit.entityexplorer</groupId>
+            <artifactId>entity-explorer-vaadin</artifactId>
+            <version>0.0.4</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- JUnit 5 testing-->
