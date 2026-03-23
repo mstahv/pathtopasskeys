@@ -1,22 +1,16 @@
 package com.example.application.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-import org.springframework.security.web.webauthn.api.AuthenticatorTransport;
-import org.springframework.security.web.webauthn.api.Bytes;
-import org.springframework.security.web.webauthn.api.CredentialRecord;
-import org.springframework.security.web.webauthn.api.ImmutableCredentialRecord;
-import org.springframework.security.web.webauthn.api.PublicKeyCredentialType;
-import org.springframework.security.web.webauthn.jackson.WebauthnJackson2Module;
+import org.springframework.security.web.webauthn.api.*;
+import tools.jackson.core.Base64Variants;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
 
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashSet;
 
 @Entity
@@ -39,8 +33,11 @@ public class WebAuthnRecord extends AbstractEntity {
     public String recordJson;
 
 
+    private static JsonMapper jm = JsonMapper.builder()
+            .defaultBase64Variant(Base64Variants.MODIFIED_FOR_URL)
+            .build();
+
     // Helpers to map the entity to/from WebAuthn4J/SpringSecurity API
-    private static ObjectMapper om = Jackson2ObjectMapperBuilder.json().modules(new WebauthnJackson2Module(), new JavaTimeModule()).build();
 
     public static WebAuthnRecord of(CredentialRecord credentialRecord) {
         WebAuthnRecord webAuthnRecord = new WebAuthnRecord();
@@ -52,15 +49,17 @@ public class WebAuthnRecord extends AbstractEntity {
 
     public CredentialRecord asCredentialRecord() {
         // ideally this would implement CredentialRecord, but not tempting looking interface for JPA
-        try {
-            JsonNode jsonNode = om.readTree(recordJson);
+        JsonNode jsonNode = jm.readTree(recordJson);
 
-        long created = jsonNode.get("created").asLong();
-        long lastUsed = jsonNode.get("lastUsed").asLong();
+        String publickey = jsonNode.get("publicKey").get("bytes").asString();
+        String attestationObject = jsonNode.get("attestationObject").get("bytes").asString();
+        String attestationClientDataJSON = jsonNode.get("attestationClientDataJSON").get("bytes").asString();
+        String created = jsonNode.get("created").asString();
+        String lastUsed = jsonNode.get("lastUsed").asString();
         ArrayNode jsonNode1 = (ArrayNode) jsonNode.get("transports");
         var transports = new HashSet<AuthenticatorTransport>();
         for (int i = 0; i < jsonNode1.size(); i++) {
-            transports.add(AuthenticatorTransport.valueOf(jsonNode1.get(i).asText()));
+            transports.add(AuthenticatorTransport.valueOf(jsonNode1.get(i).get("value").asString()));
         }
 
         return ImmutableCredentialRecord.builder()
@@ -68,27 +67,20 @@ public class WebAuthnRecord extends AbstractEntity {
                 .credentialId(new Bytes(credentialId))
                 .userEntityUserId(new Bytes(userEntityUserId))
                 .signatureCount(jsonNode.get("signatureCount").asInt())
-                .attestationObject(Bytes.fromBase64(jsonNode.get("attestationObject").asText()))
+                .attestationObject(Bytes.fromBase64(attestationObject))
                 .backupEligible(jsonNode.get("backupEligible").asBoolean())
-                .attestationClientDataJSON(Bytes.fromBase64(jsonNode.get("attestationClientDataJSON").asText()))
+                .attestationClientDataJSON(Bytes.fromBase64(attestationClientDataJSON))
                 .backupState(jsonNode.get("backupState").asBoolean())
-                .publicKey(() -> Bytes.fromBase64(jsonNode.get("publicKey").asText()).getBytes())
+                .publicKey(() -> Bytes.fromBase64(publickey).getBytes())
                 .transports(transports)
-                .lastUsed(Instant.ofEpochMilli(lastUsed))
-                .created(Instant.ofEpochMilli(created))
-                .label(jsonNode.get("label").asText())
+                .lastUsed(Instant.parse(lastUsed))
+                .created(Instant.parse(created))
+                .label(jsonNode.get("label").asString())
                 .uvInitialized(jsonNode.get("uvInitialized").asBoolean())
                 .build();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void updateJson(CredentialRecord credentialRecord) {
-        try {
-            recordJson = om.writeValueAsString(credentialRecord);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        recordJson = jm.writeValueAsString(credentialRecord);
     }
 }
