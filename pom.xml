@@ -12,13 +12,13 @@
 
     <properties>
         <java.version>23</java.version>
-        <vaadin.version>25.0.6</vaadin.version>
+        <vaadin.version>25.1.0-rc2</vaadin.version>
     </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.2</version>
+        <version>4.0.4</version>
         <relativePath/>
     </parent>
 
@@ -58,7 +58,7 @@
         <dependency>
             <groupId>in.virit</groupId>
             <artifactId>viritin</artifactId>
-            <version>3.2.0</version>
+            <version>3.3.1</version>
         </dependency>
 
         <!-- A "DB admin" tool working at JPA level to see what is happening
@@ -70,7 +70,7 @@
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
             <artifactId>entity-explorer-vaadin</artifactId>
-            <version>0.0.4</version>
+            <version>0.0.5</version>
             <scope>test</scope>
         </dependency>
 
