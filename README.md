@@ -1,21 +1,19 @@
 # PathToPasskeys - an example to get rid of ancient username-password authentication
 
-This projects shows how to derive a "standard app" (Spring Boot, Spring Security, Vaadin, JPA, PostgreSQL and username-password style authentication) to utilize passkeys, because that's what
-we should only use in 2025. Even if your passwords would be correctly hashed and salted in the DB, the greatest problem of password based logins, the user, is hard to get rid of.
+This project shows how to move a "standard app" (Spring Boot, Spring Security, Vaadin, JPA, PostgreSQL and username-password style authentication) to passkeys. Even if your passwords would be correctly hashed and salted in the DB, the greatest problem of password based logins, the user, is hard to get rid of.
 
-The final step in the project no more supports username-password authentication, but only passkeys and one time tokens as a fallback. When modernizing your app, you probably wish to support them both for a while. See the [commit timeline for the steps I did](https://github.com/mstahv/pathtopasskeys/commits/main/) (and check out them if you want to inspect them locally in IDE). Roughly the steps were:
+## The path, step by step
 
- * A dummy project downloaded from start.vaadin.com
- * Same sanitations like using TestContainers for easier development/testing and added a Profile view to e.g. change the password.
- * Add OTT (one time token) support to the project. There is a high chance you have this already e.g. to reset passwords. If you are starting from scratch today, the optimal setup is probably to have only passkeys and OTT support as a fallback (and for user registration process).
-   * Add DB table for storing OTTs and map them to the user.
-   * Add required Spring Security beans and configuration.
- * Add WebAuthn support to the project.
-   *  Add DB table for storing passkeys and map them to the user (this example uses JPA, see "Storing passkeys" below for a ready-made alternative).
-   *  Add required Spring Security configuration. Spring Security provides the HTTP endpoints for both passkey registration and login, the app only needs a bit of JavaScript to call them from Vaadin UI (see `WebAuthnJs` and `webauthn_vf.js`).
-   *  Added functionality to Profile view to register passkeys (you can have many of course) and to remove them.
-   * Added a button to the login view to initiate login using a passkey.
- * Remove username-password authentication. The superclass of LoginView chages altogether as it designed for "form based login" only. This is the final step in the project. You might want to keep it for a while, but in the end, you should get rid of them for simplicity!
+The [`path` branch](https://github.com/mstahv/pathtopasskeys/tree/path) walks through the migration with an up-to-date stack (Vaadin 25, Spring Boot 4), one tagged commit per step. Check out a tag to run that step, or follow the diff links to see what changed:
+
+| Tag | Step |
+| --- | --- |
+| [`path-1-password`](https://github.com/mstahv/pathtopasskeys/tree/path-1-password) | The starting point: users log in with a username and a password, which they can change in the Profile view. |
+| [`path-2-one-time-tokens`](https://github.com/mstahv/pathtopasskeys/tree/path-2-one-time-tokens) | One-time tokens ("magic link") as a fallback login. There is a high chance you have something similar already, e.g. to reset passwords. ([diff](https://github.com/mstahv/pathtopasskeys/compare/path-1-password...path-2-one-time-tokens)) |
+| [`path-3-passkeys`](https://github.com/mstahv/pathtopasskeys/tree/path-3-passkeys) | Passkeys in addition to passwords: a table for passkeys mapped to the users, Spring Security configuration (it provides the HTTP endpoints for registration and login, the app only needs a bit of JavaScript to call them from Vaadin, see `WebAuthnJs` and `webauthn_vf.js`), registering and removing passkeys in the Profile view and a "Use passkey" button on the login view. ([diff](https://github.com/mstahv/pathtopasskeys/compare/path-2-one-time-tokens...path-3-passkeys)) |
+| [`path-4-passwordless`](https://github.com/mstahv/pathtopasskeys/tree/path-4-passwordless) | Username-password authentication removed, only passkeys and one-time tokens remain. You might want to support both for a while, but in the end you should get rid of passwords for simplicity! ([diff](https://github.com/mstahv/pathtopasskeys/compare/path-3-passkeys...path-4-passwordless)) |
+
+Each step has browser tests for its login methods, including passkeys with Chromium's virtual authenticator. The `main` branch continues from the last step with a more polished demo app (e.g. a simple user management for admins). The original 2025 version of the path, with Vaadin 24 and Spring Boot 3, is still in the [commit history of `main`](https://github.com/mstahv/pathtopasskeys/commits/main/).
 
 See also my [year-old post about passkeys](https://vaadin.com/blog/forget-passwords-accessing-webauthn-api-with-vaadin). Compared to that example, this now utilises Spring Security and WebAuthn4J (this was not supported year ago) instead of directly implementing the WebAuthn with Yubico's library.
 

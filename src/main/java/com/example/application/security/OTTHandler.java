@@ -21,7 +21,7 @@ public class OTTHandler implements OneTimeTokenGenerationSuccessHandler {
         notification.add(new VerticalLayout(){{
             add(new Paragraph("""
                     In a real world app this would be sent to you via email/SMS,
-                    "but in this demo app we don't have email/SMS capabilities. 
+                    but in this demo app we don't have email/SMS capabilities. 
                     Just click the link below to login (utilizes standard Spring 
                     Security generated page, but you can naturally replace that with a better 
                     looking alternative. After successful login you ought to reset your
