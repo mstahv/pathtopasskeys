@@ -1,0 +1,13 @@
+/* Small tweaks on top of the default Aura theme */
+
+/* App name and the current user at the top and bottom of the drawer */
+[slot="drawer"]:is(header, footer) {
+  display: flex;
+  align-items: center;
+  gap: var(--vaadin-gap-s);
+  padding: var(--vaadin-padding-s) var(--vaadin-padding-m);
+}
+
+[slot="drawer"]:is(header, footer):empty {
+  display: none;
+}
