@@ -95,10 +95,12 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     private class UserInfo extends Div {
         UserInfo(User user) {
             add(new Avatar(user.getName()) {{
-                setImageHandler(event -> {
-                    event.setContentType("image/jpeg");
-                    event.getOutputStream().write(user.getProfilePicture());
-                });
+                if (user.getProfilePicture() != null) {
+                    setImageHandler(event -> {
+                        event.setContentType("image/jpeg");
+                        event.getOutputStream().write(user.getProfilePicture());
+                    });
+                }
                 getStyle().setFlexShrink("0");
             }});
             add(new Span(user.getName()) {{
