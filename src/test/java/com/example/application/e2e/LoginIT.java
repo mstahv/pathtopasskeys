@@ -2,6 +2,10 @@ package com.example.application.e2e;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 public class LoginIT extends AbstractE2EIT {
 
     @Test
@@ -33,5 +37,18 @@ public class LoginIT extends AbstractE2EIT {
         profilePage().open().assertLoggedInAs("admin");
         // Restore, so that the other tests can use the original password
         profilePage().changePassword("admin");
+    }
+
+    @Test
+    public void loginWithOneTimeToken() {
+        loginPage().open().loginWithOneTimeToken("user");
+        profilePage().open().assertLoggedInAs("user");
+    }
+
+    @Test
+    public void invalidOneTimeTokenIsRejected() {
+        page.navigate(getUrl() + "/login/ott?token=not-a-valid-token");
+        loginPage().submitOneTimeToken();
+        assertThat(page).hasURL(Pattern.compile("/login\\?error"));
     }
 }
