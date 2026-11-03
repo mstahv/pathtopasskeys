@@ -3,6 +3,7 @@ package com.example.application.views;
 import com.example.application.data.User;
 import com.example.application.data.WebAuthnRecord;
 import com.example.application.security.AuthenticatedUser;
+import com.example.application.security.OneTimeTokenLogin;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
@@ -11,6 +12,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
@@ -23,13 +26,28 @@ import java.util.List;
 @Route
 @Menu(order = 1, icon = LineAwesomeIconUrl.USER)
 @PermitAll
-public class Profile extends VerticalLayout {
+public class Profile extends VerticalLayout implements BeforeEnterObserver {
 
     private final AuthenticatedUser authenticatedUser;
 
     public Profile(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser;
         initView();
+    }
+
+    /**
+     * After a login with a one-time token, suggests a passkey for the next time.
+     */
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        boolean signedInWithLink = event.getLocation().getQueryParameters().getParameters()
+                .containsKey(OneTimeTokenLogin.LANDED_PARAMETER);
+        if (signedInWithLink && authenticatedUser.getPasskeys().isEmpty()) {
+            Notification.show("""
+                    You signed in with a one-time link. Register a passkey now, and next \
+                    time you can sign in with it, without waiting for a link.""",
+                    15000, Notification.Position.TOP_CENTER);
+        }
     }
 
     private void initView() {

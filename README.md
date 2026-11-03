@@ -44,8 +44,15 @@ heavy lifting. Compared to the Spring Security version:
    for any username, also for an existing user. `PasskeyRegistrationGuard` runs
    before it and allows that only for the user themself, when signed in.
  * **One-time tokens** are not built into Quarkus, but they are simple:
-   `OneTimeTokens` creates and checks them and `OneTimeTokenLogin` turns a token
-   into the same login cookie that a passkey login sets.
+   `OneTimeTokens` creates and checks them, and `OneTimeTokenLogin` turns a
+   token into the same login cookie that a passkey login sets. The link opens a
+   page with a "Sign in" button, as email clients and virus scanners may open
+   links before the user does. `LoginLinkSender` is where a real app sends the
+   link by email or SMS; this demo just shows it.
+ * **Push and background tasks:** Quarkus knows the user only during an HTTP
+   request, so in `UI.access()` from a background thread the `SecurityIdentity`
+   is not available. `AuthenticatedUser` remembers the user in the
+   `VaadinSession` for these cases, see the "Background task" view.
  * **View access control** is Vaadin's `NavigationAccessControl`, the same one
    that Spring Boot apps use. In Quarkus it is enabled with a few lines in
    `NavigationAccessControlSetup`.

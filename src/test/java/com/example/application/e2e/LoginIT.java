@@ -43,6 +43,21 @@ public class LoginIT extends AbstractE2EIT {
     }
 
     @Test
+    public void oneTimeTokenLoginLeadsToProfileWithPasskeySuggestion() {
+        loginPage().open().loginWithOneTimeToken("user");
+
+        profilePage().assertLoggedInAs("user");
+        assertThat(page.getByText("You signed in with a one-time link")).isVisible();
+    }
+
+    @Test
+    public void unknownUserGetsNoLoginLink() {
+        loginPage().open().requestOneTimeToken("nobody", false);
+        assertThat(page.getByText("If nobody is a user here, a login link is on its way.")).isVisible();
+        assertThat(page.getByText("Click here to login")).hasCount(0);
+    }
+
+    @Test
     public void invalidOneTimeTokenIsRejected() {
         page.navigate(getUrl() + "/login/ott?token=not-a-valid-token");
         loginPage().submitOneTimeToken();

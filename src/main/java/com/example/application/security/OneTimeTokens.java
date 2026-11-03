@@ -1,5 +1,6 @@
 package com.example.application.security;
 
+import com.example.application.services.UserService;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.security.SecureRandom;
@@ -11,14 +12,14 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Short-lived, single use login tokens, the fallback login method when the
- * user has no passkey (yet) on the current device. Quarkus has no built-in
- * support for these, but they are simple: a random string that maps to a
- * username for a few minutes. {@link OneTimeTokenLogin} turns a token into a
- * login.
+ * Short-lived, single use login tokens ("magic links"), the fallback login
+ * method when the user has no passkey (yet) on the current device. Quarkus has
+ * no built-in support for these, but they are simple: a random string that
+ * maps to a username for a few minutes. {@link LoginLinkSender} delivers the
+ * link to the user and {@link OneTimeTokenLogin} turns a token into a login.
  * <p>
- * This is fine for single node apps, but in a cluster you would need to share
- * the tokens between the nodes, e.g. in the database.
+ * The tokens are kept in memory. This is fine for single node apps, but in a
+ * cluster you would need to share them between the nodes, e.g. in the database.
  */
 @ApplicationScoped
 public class OneTimeTokens {
@@ -30,8 +31,25 @@ public class OneTimeTokens {
 
     private final SecureRandom random = new SecureRandom();
     private final Map<String, Token> tokens = new ConcurrentHashMap<>();
+    private final UserService userService;
+    private final LoginLinkSender sender;
 
-    public String generate(String username) {
+    public OneTimeTokens(UserService userService, LoginLinkSender sender) {
+        this.userService = userService;
+        this.sender = sender;
+    }
+
+    /**
+     * Sends a login link to the user, if there is a user with the given
+     * username. Whether there is, is not told to the caller, so that the
+     * login page can't be used to find out usernames.
+     */
+    public void sendLoginLink(String username) {
+        userService.findByUsername(username).ifPresent(user ->
+                sender.send(user, OneTimeTokenLogin.PATH + "?token=" + generate(user.getUsername())));
+    }
+
+    private String generate(String username) {
         tokens.values().removeIf(token -> token.expires().isBefore(Instant.now()));
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);

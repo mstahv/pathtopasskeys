@@ -29,6 +29,12 @@ public class OneTimeTokenLogin {
 
     public static final String PATH = "/login/ott";
 
+    /**
+     * Added to the Profile view URL after the login, so that it can suggest to
+     * add a passkey.
+     */
+    public static final String LANDED_PARAMETER = "onetimetoken";
+
     private static final Pattern TOKEN = Pattern.compile("[A-Za-z0-9_-]{1,100}");
 
     private static final String PAGE = """
@@ -84,7 +90,7 @@ public class OneTimeTokenLogin {
                 .subscribe().with(username -> {
                     if (username.isPresent()) {
                         security.rememberUser(username.get(), ctx);
-                        ctx.redirect("/");
+                        ctx.redirect("/profile?" + LANDED_PARAMETER);
                     } else {
                         ctx.redirect("/login?error");
                     }

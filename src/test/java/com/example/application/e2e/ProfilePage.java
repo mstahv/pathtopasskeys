@@ -30,7 +30,7 @@ public class ProfilePage {
     }
 
     public void assertLoggedInAs(String username) {
-        assertThat(page).hasURL(Pattern.compile("/profile$"));
+        assertThat(page).hasURL(Pattern.compile("/profile(\\?.*)?$"));
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions()
                 .setName("Profile: " + username))).isVisible();
     }

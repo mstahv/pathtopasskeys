@@ -42,12 +42,22 @@ public class LoginPage {
      * notification that in this demo replaces the email/SMS delivery.
      */
     public NotificationElement requestOneTimeToken(String username) {
+        return requestOneTimeToken(username, true);
+    }
+
+    /**
+     * @param expectLink false for an unknown user, who gets no link
+     */
+    public NotificationElement requestOneTimeToken(String username, boolean expectLink) {
         ButtonElement.getByText(page, "Request One-Time Token").click();
         var dialog = DialogElement.getByHeaderText(page, "Enter your username");
         dialog.assertOpen();
         TextFieldElement.getByLabel(dialog.getLocator(), "Username").setValue(username);
         ButtonElement.getByText(dialog.getLocator(), "Request").click();
         dialog.assertClosed();
+        if (!expectLink) {
+            return null;
+        }
 
         var notification = NotificationElement.getByText(page, "Click here to login");
         notification.assertOpen();
