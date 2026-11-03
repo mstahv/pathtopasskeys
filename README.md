@@ -11,13 +11,36 @@ The final step in the project no more supports username-password authentication,
    * Add DB table for storing OTTs and map them to the user.
    * Add required Spring Security beans and configuration.
  * Add WebAuthn support to the project.
-   *  Add DB table for storing passkeys and map them to the user.
-   *  Add required Spring Security beans and configuration. There are some that are require for a production ready setup.
+   *  Add DB table for storing passkeys and map them to the user (this example uses JPA, see "Storing passkeys" below for a ready-made alternative).
+   *  Add required Spring Security configuration. Spring Security provides the HTTP endpoints for both passkey registration and login, the app only needs a bit of JavaScript to call them from Vaadin UI (see `WebAuthnJs` and `webauthn_vf.js`).
    *  Added functionality to Profile view to register passkeys (you can have many of course) and to remove them.
    * Added a button to the login view to initiate login using a passkey.
  * Remove username-password authentication. The superclass of LoginView chages altogether as it designed for "form based login" only. This is the final step in the project. You might want to keep it for a while, but in the end, you should get rid of them for simplicity!
 
 See also my [year-old post about passkeys](https://vaadin.com/blog/forget-passwords-accessing-webauthn-api-with-vaadin). Compared to that example, this now utilises Spring Security and WebAuthn4J (this was not supported year ago) instead of directly implementing the WebAuthn with Yubico's library.
+
+## Storing passkeys
+
+By default, Spring Security keeps passkeys in memory, which is never what you want: they are lost on restart and don't work in a cluster. You need to provide implementations of two interfaces:
+
+ * `UserCredentialRepository` stores the credential records (the actual passkeys, a user can have several).
+ * `PublicKeyCredentialUserEntityRepository` maps your users to their WebAuthn user id.
+
+This example implements them with JPA (`WebAuthnUserCredentialRepositoryImpl`, `WebAuthnPublicKeyCredentialUserEntityRepositoryImpl` and the `WebAuthnRecord` entity), so that passkeys live next to the rest of the domain model.
+
+**If it fits your architecture, use the ready-made implementations instead.** Since Spring Security 6.5, there are `JdbcUserCredentialRepository` and `JdbcPublicKeyCredentialUserEntityRepository`, with table definitions shipped in the `spring-security-web` jar (`org/springframework/security/user-credentials-schema.sql`, `user-credentials-schema-postgres.sql` and `user-entities-schema.sql`). Then the passkey storage is just two beans:
+
+```java
+@Bean
+UserCredentialRepository userCredentialRepository(JdbcOperations jdbc) {
+    return new JdbcUserCredentialRepository(jdbc);
+}
+
+@Bean
+PublicKeyCredentialUserEntityRepository userEntityRepository(JdbcOperations jdbc) {
+    return new JdbcPublicKeyCredentialUserEntityRepository(jdbc);
+}
+```
 
 ## Running the application
 

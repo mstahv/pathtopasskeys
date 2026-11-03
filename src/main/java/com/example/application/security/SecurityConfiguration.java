@@ -1,6 +1,7 @@
 package com.example.application.security;
 
 import com.example.application.views.login.LoginView;
+import com.vaadin.flow.spring.security.VaadinAwareSecurityContextHolderStrategy;
 import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,29 +10,31 @@ import org.springframework.security.authentication.ott.InMemoryOneTimeTokenServi
 import org.springframework.security.authentication.ott.OneTimeTokenService;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.ott.OneTimeTokenGenerationSuccessHandler;
-import org.springframework.security.web.webauthn.api.PublicKeyCredentialRpEntity;
-import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
-import org.springframework.security.web.webauthn.management.UserCredentialRepository;
-import org.springframework.security.web.webauthn.management.WebAuthnRelyingPartyOperations;
-import org.springframework.security.web.webauthn.management.Webauthn4JRelyingPartyOperations;
 
-import java.util.Set;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
 
+    /*
+     * webauthnId (~ domain name), and webauthnOrigin are drawn in from application.properties,
+     * so that for TestApplication (used for local development) you get the value from src/test/resources.
+     * Alternatively you could use e.g. Spring profiles or environment variables to configure suitable
+     * values for both testing and production deployments.
+     */
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+            @Value("${webauthn.id}") String webauthnId,
+            @Value("${webauthn.origin}") String webauthnOrigin) {
 
         http.authorizeHttpRequests(auth -> {
             auth
-                    .requestMatchers("/webauthn/**").permitAll()
+                    // Passkey registration endpoints (login endpoints are handled before authorization)
+                    .requestMatchers("/webauthn/register/**").authenticated()
                     .requestMatchers("/images/*.png").permitAll()
                     .requestMatchers("/line-awesome/svg/*.svg").permitAll();
         });
@@ -43,9 +46,15 @@ public class SecurityConfiguration {
                 .loginPage("/login")
                 .loginProcessingUrl("/login/ott"));
 
-        http.webAuthn(withDefaults());
-
-        http.csrf(cfg -> cfg.ignoringRequestMatchers("/webauthn/**", "/login/webauthn"));
+        // Spring Security provides the endpoints for passkey registration and login,
+        // see WebAuthnJs for the Vaadin integration. Storage of passkeys is in
+        // WebAuthnUserCredentialRepositoryImpl and WebAuthnPublicKeyCredentialUserEntityRepositoryImpl.
+        http.webAuthn(webAuthn -> webAuthn
+                .rpId(webauthnId)
+                .rpName("}> WebAuthn + Spring Security Demo")
+                .allowedOrigins(webauthnOrigin)
+                // We have the Profile view for this
+                .disableDefaultRegistrationPage(true));
 
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
             configurer.loginView(LoginView.class);
@@ -53,6 +62,21 @@ public class SecurityConfiguration {
 
         return http.build();
 
+    }
+
+    /**
+     * Workaround: Spring Security's WebAuthn filters (e.g. the one serving
+     * /webauthn/register/options) pick up the global SecurityContextHolderStrategy
+     * when they are created, instead of the one configured for HttpSecurity. Vaadin
+     * sets its strategy as the global one only after the filter chain is built, so
+     * the filters would not see the logged-in user (HTTP 400). Setting it here,
+     * when the strategy bean is created, happens early enough.
+     */
+    @Bean
+    static SecurityContextHolderStrategy vaadinAwareSecurityContextHolderStrategy() {
+        var strategy = new VaadinAwareSecurityContextHolderStrategy();
+        SecurityContextHolder.setContextHolderStrategy(strategy);
+        return strategy;
     }
 
     @Bean
@@ -65,24 +89,6 @@ public class SecurityConfiguration {
         // This is fine for single node apps, but for a cluster you would need share the
         // tokens between the nodes somehow
         return new InMemoryOneTimeTokenService();
-    }
-
-    /*
-     * webauthnId (~ domain name), and webauthnOrigin are drawing in from application.properties,
-     * so that for TestApplication (used for local development) you get the value from src/test/resources.
-     * Alternatively you could use e.g. Spring profiles or environment variables to configure suitable
-     * values for both testing and production deployments.
-     */
-    @Bean public WebAuthnRelyingPartyOperations relyingPartyOperations(
-            PublicKeyCredentialUserEntityRepository userEntities,
-            UserCredentialRepository userCredentials,
-            @Value("${webauthn.id}") String webauthnId,
-            @Value("${webauthn.origin}") String webauthnOrigin) {
-        return new Webauthn4JRelyingPartyOperations(userEntities, userCredentials,
-                PublicKeyCredentialRpEntity.builder()
-                        .id(webauthnId)
-                        .name("}> WebAuthn + Spring Security Demo").build(),
-                Set.of(webauthnOrigin));
     }
 
 }

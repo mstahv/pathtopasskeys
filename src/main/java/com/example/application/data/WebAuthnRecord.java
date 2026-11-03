@@ -3,84 +3,113 @@ package com.example.application.data;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
-import org.springframework.security.web.webauthn.api.*;
-import tools.jackson.core.Base64Variants;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.node.ArrayNode;
+import org.springframework.security.web.webauthn.api.AuthenticatorTransport;
+import org.springframework.security.web.webauthn.api.Bytes;
+import org.springframework.security.web.webauthn.api.CredentialRecord;
+import org.springframework.security.web.webauthn.api.ImmutableCredentialRecord;
+import org.springframework.security.web.webauthn.api.ImmutablePublicKeyCose;
+import org.springframework.security.web.webauthn.api.PublicKeyCredentialType;
 
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
+/**
+ * A passkey (WebAuthn credential record) of a {@link User}, persisted with JPA.
+ * <p>
+ * The columns mirror the {@code user_credentials} table of Spring Security's
+ * {@link org.springframework.security.web.webauthn.management.JdbcUserCredentialRepository}.
+ * If plain JDBC fits your architecture, you can use that ready-made
+ * implementation instead of this entity and
+ * {@link com.example.application.security.WebAuthnUserCredentialRepositoryImpl}.
+ */
 @Entity
 public class WebAuthnRecord extends AbstractEntity {
-
-    public WebAuthnRecord() {
-    }
 
     @ManyToOne
     public User user;
 
-    @Column(columnDefinition="bytea")
+    @Column(columnDefinition = "bytea", unique = true)
     public byte[] credentialId;
 
-    // TODO this could be a foreign key to the user table instead of a byte user
-    @Column(columnDefinition="bytea")
+    /**
+     * The WebAuthn id of the user ({@link User#getWebAuthnId()}), as reported by the authenticator.
+     */
+    @Column(columnDefinition = "bytea")
     public byte[] userEntityUserId;
 
-    @Column(columnDefinition="TEXT")
-    public String recordJson;
+    @Column(columnDefinition = "bytea")
+    public byte[] publicKey;
 
+    public long signatureCount;
 
-    private static JsonMapper jm = JsonMapper.builder()
-            .defaultBase64Variant(Base64Variants.MODIFIED_FOR_URL)
-            .build();
+    public boolean uvInitialized;
 
-    // Helpers to map the entity to/from WebAuthn4J/SpringSecurity API
+    public boolean backupEligible;
 
-    public static WebAuthnRecord of(CredentialRecord credentialRecord) {
-        WebAuthnRecord webAuthnRecord = new WebAuthnRecord();
-        webAuthnRecord.credentialId = credentialRecord.getCredentialId().getBytes();
-        webAuthnRecord.userEntityUserId = credentialRecord.getUserEntityUserId().getBytes();
-        webAuthnRecord.updateJson(credentialRecord);
-        return webAuthnRecord;
+    public boolean backupState;
+
+    /**
+     * Comma separated {@link AuthenticatorTransport} values, e.g. "internal,hybrid"
+     */
+    public String transports;
+
+    @Column(columnDefinition = "bytea")
+    public byte[] attestationObject;
+
+    @Column(columnDefinition = "bytea")
+    public byte[] attestationClientDataJSON;
+
+    public Instant created;
+
+    public Instant lastUsed;
+
+    public String label;
+
+    /**
+     * Copies the state of the given credential record (from Spring Security) to this entity.
+     */
+    public void update(CredentialRecord record) {
+        credentialId = record.getCredentialId().getBytes();
+        userEntityUserId = record.getUserEntityUserId().getBytes();
+        publicKey = record.getPublicKey().getBytes();
+        signatureCount = record.getSignatureCount();
+        uvInitialized = record.isUvInitialized();
+        backupEligible = record.isBackupEligible();
+        backupState = record.isBackupState();
+        transports = record.getTransports().stream()
+                .map(AuthenticatorTransport::getValue)
+                .collect(Collectors.joining(","));
+        attestationObject = bytesOrNull(record.getAttestationObject());
+        attestationClientDataJSON = bytesOrNull(record.getAttestationClientDataJSON());
+        created = record.getCreated();
+        lastUsed = record.getLastUsed();
+        label = record.getLabel();
     }
 
     public CredentialRecord asCredentialRecord() {
-        // ideally this would implement CredentialRecord, but not tempting looking interface for JPA
-        JsonNode jsonNode = jm.readTree(recordJson);
-
-        String publickey = jsonNode.get("publicKey").get("bytes").asString();
-        String attestationObject = jsonNode.get("attestationObject").get("bytes").asString();
-        String attestationClientDataJSON = jsonNode.get("attestationClientDataJSON").get("bytes").asString();
-        String created = jsonNode.get("created").asString();
-        String lastUsed = jsonNode.get("lastUsed").asString();
-        ArrayNode jsonNode1 = (ArrayNode) jsonNode.get("transports");
-        var transports = new HashSet<AuthenticatorTransport>();
-        for (int i = 0; i < jsonNode1.size(); i++) {
-            transports.add(AuthenticatorTransport.valueOf(jsonNode1.get(i).get("value").asString()));
-        }
-
         return ImmutableCredentialRecord.builder()
                 .credentialType(PublicKeyCredentialType.PUBLIC_KEY)
                 .credentialId(new Bytes(credentialId))
                 .userEntityUserId(new Bytes(userEntityUserId))
-                .signatureCount(jsonNode.get("signatureCount").asInt())
-                .attestationObject(Bytes.fromBase64(attestationObject))
-                .backupEligible(jsonNode.get("backupEligible").asBoolean())
-                .attestationClientDataJSON(Bytes.fromBase64(attestationClientDataJSON))
-                .backupState(jsonNode.get("backupState").asBoolean())
-                .publicKey(() -> Bytes.fromBase64(publickey).getBytes())
-                .transports(transports)
-                .lastUsed(Instant.parse(lastUsed))
-                .created(Instant.parse(created))
-                .label(jsonNode.get("label").asString())
-                .uvInitialized(jsonNode.get("uvInitialized").asBoolean())
+                .publicKey(new ImmutablePublicKeyCose(publicKey))
+                .signatureCount(signatureCount)
+                .uvInitialized(uvInitialized)
+                .backupEligible(backupEligible)
+                .backupState(backupState)
+                .transports(Arrays.stream(transports.split(","))
+                        .filter(t -> !t.isBlank())
+                        .map(AuthenticatorTransport::valueOf)
+                        .collect(Collectors.toSet()))
+                .attestationObject(attestationObject == null ? null : new Bytes(attestationObject))
+                .attestationClientDataJSON(attestationClientDataJSON == null ? null : new Bytes(attestationClientDataJSON))
+                .created(created)
+                .lastUsed(lastUsed)
+                .label(label)
                 .build();
     }
 
-    public void updateJson(CredentialRecord credentialRecord) {
-        recordJson = jm.writeValueAsString(credentialRecord);
+    private static byte[] bytesOrNull(Bytes bytes) {
+        return bytes == null ? null : bytes.getBytes();
     }
 }

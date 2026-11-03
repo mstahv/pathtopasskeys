@@ -37,6 +37,16 @@ public class PasskeyIT extends AbstractE2EIT {
     }
 
     @Test
+    public void registrationEndpointsRequireCsrfToken() {
+        loginPage().open().loginWithOneTimeToken("user");
+        profilePage().open().assertLoggedInAs("user");
+
+        // Same session cookies as the page, but no CSRF token
+        var response = page.request().post(getUrl() + "/webauthn/register/options");
+        assertEquals(403, response.status());
+    }
+
+    @Test
     public void unregisteredPasskeyIsRejected() {
         var authenticator = VirtualAuthenticator.attachTo(page);
 

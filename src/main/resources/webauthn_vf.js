@@ -1,17 +1,21 @@
-// A slightly simplified/modified version of the original script used by Spring Security
-// that is better suited for Vaadin Flow UIs to handle WebAuthn registration and authentication.
-
+// Browser side of the WebAuthn ceremonies, used via WebAuthnJs.java.
+// A trimmed version of Spring Security's spring-security-webauthn.js: that script
+// only exposes functions tied to Spring Security's generated HTML pages, so we
+// expose the core functions to be called from Vaadin instead. Both talk to the
+// endpoints Spring Security provides.
 "use strict";
 (() => {
-  // lib/base64url.js
-  var base64url_default = {
-    encode: function(buffer) {
+  if (window.webauthnVf) {
+    return;
+  }
+
+  const base64url = {
+    encode(buffer) {
       const base64 = window.btoa(String.fromCharCode(...new Uint8Array(buffer)));
       return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
     },
-    decode: function(base64url) {
-      const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
-      const binStr = window.atob(base64);
+    decode(value) {
+      const binStr = window.atob(value.replace(/-/g, "+").replace(/_/g, "/"));
       const bin = new Uint8Array(binStr.length);
       for (let i = 0; i < binStr.length; i++) {
         bin[i] = binStr.charCodeAt(i);
@@ -20,209 +24,87 @@
     }
   };
 
-  // lib/http.js
   async function post(url, headers, body) {
-    const options = {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers
-      }
-    };
-    if (body) {
-      options.body = JSON.stringify(body);
+      headers: { "Content-Type": "application/json", ...headers },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!response.ok) {
+      throw new Error(`${url} responded with HTTP ${response.status}`);
     }
-    return fetch(url, options);
+    return response.json();
   }
-  var http_default = { post };
 
-  // lib/abort-controller.js
-  var holder = {
-    controller: new AbortController()
-  };
-  function newSignal() {
-    if (!!holder.controller) {
-      holder.controller.abort("Initiating new WebAuthN ceremony, cancelling current ceremony");
-    }
-    holder.controller = new AbortController();
-    return holder.controller.signal;
-  }
-  var abort_controller_default = {
-    newSignal
-  };
-
-  // lib/webauthn-core.js
-  async function isConditionalMediationAvailable() {
-    return !!(window.PublicKeyCredential && window.PublicKeyCredential.isConditionalMediationAvailable && await window.PublicKeyCredential.isConditionalMediationAvailable());
-  }
-  async function authenticate(headers, contextPath, useConditionalMediation) {
-    let options;
-    try {
-      const optionsResponse = await http_default.post(`${contextPath}/webauthn/authenticate/options`, headers);
-      if (!optionsResponse.ok) {
-        throw new Error(`HTTP ${optionsResponse.status}`);
-      }
-      options = await optionsResponse.json();
-    } catch (err) {
-      throw new Error(`Authentication failed. Could not fetch authentication options: ${err.message}`, { cause: err });
-    }
-    const decodedOptions = {
-      ...options,
-      challenge: base64url_default.decode(options.challenge)
-    };
-    const credentialOptions = {
-      publicKey: decodedOptions,
-      signal: abort_controller_default.newSignal()
-    };
-    if (useConditionalMediation) {
-      credentialOptions.mediation = "conditional";
-    }
-    let cred;
-    try {
-      cred = await navigator.credentials.get(credentialOptions);
-    } catch (err) {
-      throw new Error(`Authentication failed. Call to navigator.credentials.get failed: ${err.message}`, { cause: err });
-    }
-    const { response, type: credType } = cred;
-    let userHandle;
-    if (response.userHandle) {
-      userHandle = base64url_default.encode(response.userHandle);
-    }
-    const body = {
+  async function authenticate(headers) {
+    const options = await post("/webauthn/authenticate/options", headers);
+    const cred = await navigator.credentials.get({
+      publicKey: { ...options, challenge: base64url.decode(options.challenge) }
+    });
+    const { response } = cred;
+    const result = await post("/login/webauthn", headers, {
       id: cred.id,
-      rawId: base64url_default.encode(cred.rawId),
+      rawId: base64url.encode(cred.rawId),
       response: {
-        authenticatorData: base64url_default.encode(response.authenticatorData),
-        clientDataJSON: base64url_default.encode(response.clientDataJSON),
-        signature: base64url_default.encode(response.signature),
-        userHandle
+        authenticatorData: base64url.encode(response.authenticatorData),
+        clientDataJSON: base64url.encode(response.clientDataJSON),
+        signature: base64url.encode(response.signature),
+        userHandle: response.userHandle ? base64url.encode(response.userHandle) : undefined
       },
-      credType,
+      credType: cred.type,
       clientExtensionResults: cred.getClientExtensionResults(),
       authenticatorAttachment: cred.authenticatorAttachment
-    };
-    let authenticationResponse;
-    try {
-      const authenticationCallResponse = await http_default.post(`${contextPath}/login/webauthn`, headers, body);
-      if (!authenticationCallResponse.ok) {
-        throw new Error(`HTTP ${authenticationCallResponse.status}`);
-      }
-      authenticationResponse = await authenticationCallResponse.json();
-    } catch (err) {
-      throw new Error(`Authentication failed. Could not process the authentication request: ${err.message}`, {
-        cause: err
-      });
+    });
+    if (!(result && result.authenticated && result.redirectUrl)) {
+      throw new Error(`Authentication failed: ${JSON.stringify(result)}`);
     }
-    if (!(authenticationResponse && authenticationResponse.authenticated && authenticationResponse.redirectUrl)) {
-      throw new Error(
-        `Authentication failed. Expected {"authenticated": true, "redirectUrl": "..."}, server responded with: ${JSON.stringify(authenticationResponse)}`
-      );
-    }
-    return authenticationResponse.redirectUrl;
+    return result.redirectUrl;
   }
-  async function register(options, label) {
-    const decodedExcludeCredentials = !options.excludeCredentials ? [] : options.excludeCredentials.map((cred) => ({
-      ...cred,
-      id: base64url_default.decode(cred.id)
-    }));
-    const decodedOptions = {
-      ...options,
-      user: {
-        ...options.user,
-        id: base64url_default.decode(options.user.id)
-      },
-      challenge: base64url_default.decode(options.challenge),
-      excludeCredentials: decodedExcludeCredentials
-    };
-    let credentialsContainer;
-    try {
-      credentialsContainer = await navigator.credentials.create({
-        publicKey: decodedOptions
-      });
-    } catch (e) {
-      throw new Error(`Registration failed. Call to navigator.credentials.create failed: ${e.message}`, { cause: e });
-    }
-    const { response } = credentialsContainer;
-    const credential = {
-      id: credentialsContainer.id,
-      rawId: base64url_default.encode(credentialsContainer.rawId),
-      response: {
-        attestationObject: base64url_default.encode(response.attestationObject),
-        clientDataJSON: base64url_default.encode(response.clientDataJSON),
-        transports: response.getTransports ? response.getTransports() : []
-      },
-      type: credentialsContainer.type,
-      clientExtensionResults: credentialsContainer.getClientExtensionResults(),
-      authenticatorAttachment: credentialsContainer.authenticatorAttachment
-    };
-    const publicKey = {
-        credential,
-        label
-    };
-    return publicKey;
-  }
-  var webauthn_core_default = {
-    authenticate,
-    register,
-    isConditionalMediationAvailable
-  };
 
-  // lib/webauthn-login.js
-  async function authenticateOrError() {
-    const headers = [];
-    const contextPath = "";
-    const useConditionalMediation = false;
+  async function authenticateOrError(headers) {
     try {
-      const redirectUrl = await webauthn_core_default.authenticate(headers, contextPath, useConditionalMediation);
-      window.location.href = redirectUrl;
+      window.location.href = await authenticate(headers);
     } catch (err) {
       console.error(err);
-      window.location.href = `${contextPath}/login?error`;
+      window.location.href = "/login?error";
     }
   }
 
-  // lib/webauthn-registration.js
-  function setVisibility(element, value) {
-    if (!element) {
-      return;
-    }
-    element.style.display = value ? "block" : "none";
-  }
-  function setError(ui, msg) {
-    resetPopups(ui);
-    const error = ui.getError();
-    if (!error) {
-      return;
-    }
-    error.textContent = msg;
-    setVisibility(error, true);
-  }
-  function setSuccess(ui) {
-    resetPopups(ui);
-    const success = ui.getSuccess();
-    if (!success) {
-      return;
-    }
-    setVisibility(success, true);
-  }
-  function resetPopups(ui) {
-    const success = ui.getSuccess();
-    const error = ui.getError();
-    setVisibility(success, false);
-    setVisibility(error, false);
-  }
-  async function submitDeleteForm(contextPath, form, headers) {
-    const options = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers
+  async function register(headers, label) {
+    const options = await post("/webauthn/register/options", headers);
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        ...options,
+        user: { ...options.user, id: base64url.decode(options.user.id) },
+        challenge: base64url.decode(options.challenge),
+        excludeCredentials: (options.excludeCredentials || []).map((c) => ({
+          ...c,
+          id: base64url.decode(c.id)
+        }))
       }
-    };
-    await fetch(form.action, options);
+    });
+    const { response } = cred;
+    const result = await post("/webauthn/register", headers, {
+      publicKey: {
+        credential: {
+          id: cred.id,
+          rawId: base64url.encode(cred.rawId),
+          response: {
+            attestationObject: base64url.encode(response.attestationObject),
+            clientDataJSON: base64url.encode(response.clientDataJSON),
+            transports: response.getTransports ? response.getTransports() : []
+          },
+          type: cred.type,
+          clientExtensionResults: cred.getClientExtensionResults(),
+          authenticatorAttachment: cred.authenticatorAttachment
+        },
+        label
+      }
+    });
+    if (!(result && result.success)) {
+      throw new Error(`Registration failed: ${JSON.stringify(result)}`);
+    }
   }
 
-  // lib/index.js
-  window.authenticateOrError = authenticateOrError;
-  window.register = webauthn_core_default.register;
+  window.webauthnVf = { authenticateOrError, register };
 })();

@@ -8,6 +8,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -52,23 +54,27 @@ public class Profile extends VerticalLayout {
         } else {
             passkeys.forEach(passkey -> {
                 add(new HorizontalLayout() {{
-                    String label = passkey.asCredentialRecord().getLabel();
-                    add(new Paragraph(label));
+                    add(new Paragraph(passkey.label));
                     add(new DeleteButton(() -> {
                         authenticatedUser.deletePasskey(passkey);
                         initView();
                     }) {{
-                        setAriaLabel("Delete passkey " + label);
+                        setAriaLabel("Delete passkey " + passkey.label);
                     }});
                 }});
             });
         }
 
         add(new Button("Register new passkey", e -> {
-            authenticatedUser.startWebAuthnRegistration()
+            authenticatedUser.registerPasskey()
                     .thenRun(() -> {
                         VNotification.prominent("Passkey registered!");
                         initView();
+                    })
+                    .exceptionally(ex -> {
+                        Notification.show("Passkey registration failed: " + ex.getMessage())
+                                .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                        return null;
                     });
         }));
 
