@@ -33,16 +33,23 @@ public class LoginView extends VerticalLayout {
         add(new LoginWithPasskeyButton() {{
             getStyle().setMarginTop("var(--vaadin-gap-m)");
         }});
-        add(new Paragraph("No passkey yet, or on another device?") {{
-            getStyle().setColor("var(--vaadin-text-color-secondary)")
-                    .setMargin("var(--vaadin-gap-m) 0 0");
-        }});
+        add(new Hint("No passkey yet, or on another device?"));
         add(new OttButton(oneTimeTokens));
+        add(new Hint("New here? Pick a username and create a passkey for it."));
+        add(new SignUpForm());
         setSpacing(false);
         setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         getStyle().setTextAlign(Style.TextAlign.CENTER).setMaxWidth("34rem").setMargin("0 auto");
+    }
+
+    static class Hint extends Paragraph {
+        Hint(String text) {
+            super(text);
+            getStyle().setColor("var(--vaadin-text-color-secondary)")
+                    .setMargin("var(--vaadin-gap-m) 0 0");
+        }
     }
 
     /**
@@ -74,7 +81,7 @@ public class LoginView extends VerticalLayout {
             }});
             add(new Paragraph(new Text("Use "), new Code("user"), new Text(" or "), new Code("admin"),
                     new Text(". Sign in first with a one-time token, then register a passkey in the Profile view. " +
-                            "After that, \"Use passkey\" works.")) {{
+                            "After that, \"Use passkey\" works. Or sign up with a new username below.")) {{
                 getStyle().setMargin("var(--vaadin-gap-xs) 0 0");
             }});
             getStyle()

@@ -28,18 +28,15 @@ public final class WebAuthnJs {
     }
 
     /**
-     * Creates a new passkey for the current user and stores it on the server,
-     * using the endpoints in {@link PasskeyRegistration}.
+     * Creates a new passkey and stores it on the server, using the built-in
+     * Quarkus endpoint. For a new username, this creates the account too (see
+     * {@link PasskeyUserProvider#store}). The user is signed in afterwards.
      *
      * @return a future that completes when the passkey is stored, or fails if the
      * browser or server rejects the registration
      */
     public static CompletableFuture<Void> register(String username) {
-        return page().executeJs("""
-                        return new WebAuthn({registerOptionsChallengePath: $0, registerPath: $1})
-                            .register({username: $2}).then(() => {});
-                        """,
-                        PasskeyRegistration.OPTIONS_PATH, PasskeyRegistration.REGISTER_PATH, username)
+        return page().executeJs("return new WebAuthn().register({username: $0}).then(() => {});", username)
                 .toCompletableFuture(Void.class);
     }
 

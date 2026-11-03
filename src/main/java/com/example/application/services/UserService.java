@@ -3,10 +3,8 @@ package com.example.application.services;
 import com.example.application.data.Role;
 import com.example.application.data.User;
 import com.example.application.data.UserRepository;
-import com.example.application.data.WebAuthnRecord;
 import com.example.application.data.WebAuthnRecordRepository;
 import io.quarkus.panache.common.Sort;
-import io.quarkus.security.webauthn.WebAuthnCredentialRecord;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -59,14 +57,6 @@ public class UserService {
     public void delete(User user) {
         webAuthnRecordRepository.delete("user.id", user.getId());
         repository.deleteById(user.getId());
-    }
-
-    /**
-     * Stores a new, already verified, passkey for the user.
-     */
-    public void addPasskey(String username, WebAuthnCredentialRecord credential, String label) {
-        User user = repository.findByUsername(username).orElseThrow();
-        webAuthnRecordRepository.persist(WebAuthnRecord.of(user, credential, label));
     }
 
     public long passkeyCount(User user) {

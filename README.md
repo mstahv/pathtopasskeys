@@ -6,6 +6,7 @@ Passwordless login with passkeys for a [Vaadin](https://vaadin.com) app on
 and Spring Security, just built on Quarkus instead:
 
  * Users sign in with **passkeys**, with **one-time tokens** ("magic links") as a fallback
+ * Anybody can **sign up** with a passkey (and gets the USER role)
  * Users register and delete their passkeys in the Profile view
  * Admins can add and delete users
  * Views are protected with the standard `@AnonymousAllowed`, `@PermitAll` and
@@ -29,18 +30,19 @@ with the passkey.
 The [WebAuthn extension](https://quarkus.io/guides/security-webauthn) does the
 heavy lifting. Compared to the Spring Security version:
 
- * **Login and logout** use the built-in endpoints of the extension
-   (`/q/webauthn/login`, `/q/webauthn/logout`). The browser side is the
-   `webauthn.js` served by Quarkus, called from Java in `WebAuthnJs`.
+ * **Login, logout and registration** use the built-in endpoints of the
+   extension (`/q/webauthn/login`, `/q/webauthn/logout`, `/q/webauthn/register`).
+   The browser side is the `webauthn.js` served by Quarkus, called from Java in
+   `WebAuthnJs`.
  * **The login is an encrypted cookie**, not a part of the HTTP session.
    Quarkus checks it on each request, and `RolesAugmentor` adds the roles of the
    user from the database.
- * **Passkeys are stored** with JPA in `WebAuthnRecord`. Quarkus needs only a
-   few fields of them, and finds them through `PasskeyUserProvider`.
- * **Passkey registration** for the signed-in user is in `PasskeyRegistration`
-   (a couple of Vert.x routes). The built-in registration endpoint is disabled,
-   as it is for signing up new users: it lets anybody register a passkey for any
-   free username.
+ * **Passkeys are stored** with JPA in `WebAuthnRecord`, through
+   `PasskeyUserProvider`. Quarkus needs only a few fields of them. A passkey for
+   a new username creates the user too, that's the sign-up.
+ * **Registration is guarded:** the built-in endpoint would register a passkey
+   for any username, also for an existing user. `PasskeyRegistrationGuard` runs
+   before it and allows that only for the user themself, when signed in.
  * **One-time tokens** are not built into Quarkus, but they are simple:
    `OneTimeTokens` creates and checks them and `OneTimeTokenLogin` turns a token
    into the same login cookie that a passkey login sets.

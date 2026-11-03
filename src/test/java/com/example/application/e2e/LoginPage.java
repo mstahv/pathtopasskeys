@@ -77,6 +77,16 @@ public class LoginPage {
     }
 
     /**
+     * Creates a new account with a passkey. Requires a {@link VirtualAuthenticator} on the page.
+     */
+    public void signUp(String username) {
+        TextFieldElement.getByLabel(page, "Username for the new account").setValue(username);
+        ButtonElement.getByText(page, "Sign up with passkey").click();
+        // Signed in, the page is reloaded at the front page
+        page.waitForURL(url -> !url.contains("/login"));
+    }
+
+    /**
      * Clicks the passkey button. Requires a {@link VirtualAuthenticator} on the page.
      */
     public void loginWithPasskey() {

@@ -5,7 +5,6 @@ import com.microsoft.playwright.options.RequestOptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Passkey (WebAuthn) flows, using Chromium's virtual authenticator in place of
@@ -41,11 +40,34 @@ public class PasskeyIT extends AbstractE2EIT {
     }
 
     @Test
-    public void registrationEndpointsRequireLogin() {
-        var response = page.request().get(getUrl() + "/passkey/register-options",
-                RequestOptions.create().setMaxRedirects(0));
-        assertEquals(302, response.status());
-        assertTrue(response.headers().get("location").endsWith("/login"));
+    public void signUpWithPasskey() {
+        VirtualAuthenticator.attachTo(page);
+
+        loginPage().open().signUp("newbie");
+        var profile = profilePage().open();
+        profile.assertLoggedInAs("newbie");
+        profile.assertPasskeyCount(1);
+        profile.signOut();
+
+        loginPage().open().loginWithPasskey();
+        profilePage().open().assertLoggedInAs("newbie");
+    }
+
+    @Test
+    public void cannotAddPasskeyToSomebodyElse() {
+        // Not signed in
+        assertEquals(403, postRegistration("admin"));
+
+        // Signed in, but as another user
+        loginPage().open().loginWithOneTimeToken("user");
+        profilePage().open().assertLoggedInAs("user");
+        assertEquals(403, postRegistration("admin"));
+    }
+
+    private int postRegistration(String username) {
+        // With the cookies of the page. The guard stops this before the passkey would be checked.
+        return page.request().post(getUrl() + "/q/webauthn/register?username=" + username,
+                RequestOptions.create().setHeader("Content-Type", "application/json").setData("{}")).status();
     }
 
     @Test
