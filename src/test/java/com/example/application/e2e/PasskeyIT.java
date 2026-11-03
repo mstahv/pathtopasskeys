@@ -14,8 +14,8 @@ public class PasskeyIT extends AbstractE2EIT {
     public void registerPasskeyThenLoginWithItAndDeleteIt() {
         var authenticator = VirtualAuthenticator.attachTo(page);
 
-        // A user with a password adds a passkey to their account
-        loginPage().open().loginWithPassword("admin", "admin");
+        // Bootstrap: first login with the one-time token fallback
+        loginPage().open().loginWithOneTimeToken("admin");
         var profile = profilePage().open();
         profile.assertLoggedInAs("admin");
         profile.assertPasskeyCount(0);
@@ -38,7 +38,7 @@ public class PasskeyIT extends AbstractE2EIT {
 
     @Test
     public void registrationEndpointsRequireCsrfToken() {
-        loginPage().open().loginWithPassword("user", "user");
+        loginPage().open().loginWithOneTimeToken("user");
         profilePage().open().assertLoggedInAs("user");
 
         // Same session cookies as the page, but no CSRF token
@@ -51,7 +51,7 @@ public class PasskeyIT extends AbstractE2EIT {
         var authenticator = VirtualAuthenticator.attachTo(page);
 
         // Register a passkey for a user, then remove it from the server only.
-        loginPage().open().loginWithPassword("user", "user");
+        loginPage().open().loginWithOneTimeToken("user");
         var profile = profilePage().open();
         profile.registerPasskey();
         profile.assertPasskeyCount(1);

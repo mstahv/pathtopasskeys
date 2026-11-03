@@ -1,38 +1,27 @@
 package com.example.application.views.login;
 
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 /**
- * The classic login screen: username and password, posted to Spring Security.
+ * No more passwords: sign in with a passkey, or with a one-time token as a fallback.
  */
 @AnonymousAllowed
 @PageTitle("Login")
 @Route(value = "login", autoLayout = false)
-public class LoginView extends LoginOverlay implements BeforeEnterObserver {
+public class LoginView extends VerticalLayout {
 
     public LoginView(OttButton ottButton) {
-        setAction("login");
-        setTitle("PathToPasskeys");
-        setDescription("Login using user/user or admin/admin");
-        setForgotPasswordButtonVisible(false);
-        getFooter().add(new VerticalLayout(
-                new LoginWithPasskeyButton(),
-                new Paragraph("Problems signing in? Try this:"),
-                ottButton) {{
-            setAlignItems(Alignment.CENTER);
-        }});
-        setOpened(true);
-    }
-
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
+        add(new H2("PathToPasskeys"));
+        add(new LoginWithPasskeyButton());
+        add(new Paragraph("No passkey yet, or on another device? Try this:"));
+        add(ottButton);
+        setSizeFull();
+        setJustifyContentMode(JustifyContentMode.CENTER);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
     }
 }

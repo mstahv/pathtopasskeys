@@ -26,7 +26,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("No user present with username: " + username));
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getHashedPassword(),
+        // Users sign in with passkeys and one-time tokens only, so no password
+        // is exposed to Spring Security
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), "",
                 getAuthorities(user));
     }
 

@@ -5,7 +5,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import org.vaadin.addons.dramafinder.element.ButtonElement;
 import org.vaadin.addons.dramafinder.element.DialogElement;
-import org.vaadin.addons.dramafinder.element.LoginOverlayElement;
 import org.vaadin.addons.dramafinder.element.NotificationElement;
 import org.vaadin.addons.dramafinder.element.TextFieldElement;
 
@@ -34,17 +33,7 @@ public class LoginPage {
 
     public void assertIsShown() {
         assertThat(page).hasURL(Pattern.compile("/login(\\?.*)?$"));
-        loginOverlay().assertOpen();
-    }
-
-    public void loginWithPassword(String username, String password) {
-        loginOverlay().login(username, password);
-        // Wait for the form POST and redirect to complete
-        page.waitForURL(url -> !url.endsWith("/login"));
-    }
-
-    public void assertLoginError() {
-        loginOverlay().assertErrorVisible();
+        ButtonElement.getByText(page, "Use passkey").assertVisible();
     }
 
     /**
@@ -92,9 +81,5 @@ public class LoginPage {
         ButtonElement.getByText(page, "Use passkey").click();
         // The ceremony ends with a JS redirect: to the app on success, /login?error on failure
         page.waitForURL(url -> !url.endsWith("/login"));
-    }
-
-    private LoginOverlayElement loginOverlay() {
-        return new LoginOverlayElement(page);
     }
 }

@@ -12,19 +12,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.ott.OneTimeTokenGenerationSuccessHandler;
 
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration {
-
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     /*
      * webauthnId (~ domain name), and webauthnOrigin are drawn in from application.properties,
@@ -61,7 +54,7 @@ public class SecurityConfiguration {
                 // We have the Profile view for this
                 .disableDefaultRegistrationPage(true));
 
-        // Username + password login with LoginView as the login page
+        // LoginView as the login page (passkeys and one-time tokens only)
         http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
             configurer.loginView(LoginView.class);
         });

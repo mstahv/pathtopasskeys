@@ -6,7 +6,6 @@ import com.microsoft.playwright.options.AriaRole;
 import org.vaadin.addons.dramafinder.element.ButtonElement;
 import org.vaadin.addons.dramafinder.element.DialogElement;
 import org.vaadin.addons.dramafinder.element.NotificationElement;
-import org.vaadin.addons.dramafinder.element.PasswordFieldElement;
 
 import java.util.regex.Pattern;
 
@@ -58,13 +57,6 @@ public class ProfilePage {
 
     private Locator deleteButtons() {
         return page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete passkey"));
-    }
-
-    public void changePassword(String newPassword) {
-        PasswordFieldElement.getByLabel(page, "New password").setValue(newPassword);
-        PasswordFieldElement.getByLabel(page, "Repeat password").setValue(newPassword);
-        ButtonElement.getByText(page, "Change password").click();
-        NotificationElement.getByText(page, "Password changed!").assertOpen();
     }
 
     public void signOut() {

@@ -15,28 +15,20 @@ public class LoginIT extends AbstractE2EIT {
     }
 
     @Test
-    public void loginWithPassword() {
-        loginPage().open().loginWithPassword("user", "user");
-        profilePage().open().assertLoggedInAs("user");
-    }
-
-    @Test
-    public void wrongPasswordIsRejected() {
-        loginPage().open().loginWithPassword("user", "wrong");
-        loginPage().assertLoginError();
-    }
-
-    @Test
-    public void changePasswordAndSignOut() {
-        loginPage().open().loginWithPassword("admin", "admin");
-        var profile = profilePage().open();
-        profile.changePassword("better-admin-password");
-        profile.signOut();
-
-        loginPage().open().loginWithPassword("admin", "better-admin-password");
-        profilePage().open().assertLoggedInAs("admin");
-        // Restore, so that the other tests can use the original password
-        profilePage().changePassword("admin");
+    public void passwordLoginIsGone() {
+        // Spring Security still has its form login filter, but it accepts no password
+        // anymore, not even the old one or an empty one
+        loginPage().open();
+        for (String password : new String[]{"user", ""}) {
+            page.evaluate("""
+                    async password => {
+                        const csrf = document.querySelector('meta[name=_csrf]').content;
+                        const body = new URLSearchParams({username: 'user', password, _csrf: csrf});
+                        await fetch('/login', {method: 'POST', body});
+                    }""", password);
+            profilePage().open();
+            loginPage().assertIsShown();
+        }
     }
 
     @Test

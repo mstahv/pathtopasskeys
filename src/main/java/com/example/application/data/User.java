@@ -17,6 +17,10 @@ public class User extends AbstractEntity {
 
     private String username;
     private String name;
+    /**
+     * Not used anymore, left only so that the old demo data still loads. Drop it
+     * from your schema once all users have moved to passkeys.
+     */
     @JsonIgnore
     private String hashedPassword;
     @Enumerated(EnumType.STRING)
@@ -43,12 +47,6 @@ public class User extends AbstractEntity {
     }
     public void setName(String name) {
         this.name = name;
-    }
-    public String getHashedPassword() {
-        return hashedPassword;
-    }
-    public void setHashedPassword(String hashedPassword) {
-        this.hashedPassword = hashedPassword;
     }
     public Set<Role> getRoles() {
         return roles;
