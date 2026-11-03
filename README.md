@@ -15,6 +15,10 @@ The [`path` branch](https://github.com/mstahv/pathtopasskeys/tree/path) walks th
 
 Each step has browser tests for its login methods, including passkeys with Chromium's virtual authenticator. The `main` branch continues from the last step with a more polished demo app (e.g. a simple user management for admins). The original 2025 version of the path, with Vaadin 24 and Spring Boot 3, is still in the [commit history of `main`](https://github.com/mstahv/pathtopasskeys/commits/main/).
 
+## Using Quarkus?
+
+The [`quarkus` branch](https://github.com/mstahv/pathtopasskeys/tree/quarkus) has a mini example of the same app on Quarkus instead of Spring Boot. It uses the built-in passkey support of Quarkus (the WebAuthn extension) for login and registration, with one-time tokens as a fallback, Vaadin's view access control, JPA with Panache and the same kind of browser tests. It also shows how to find out the user in background tasks with Vaadin push.
+
 See also my [year-old post about passkeys](https://vaadin.com/blog/forget-passwords-accessing-webauthn-api-with-vaadin). Compared to that example, this now utilises Spring Security and WebAuthn4J (this was not supported year ago) instead of directly implementing the WebAuthn with Yubico's library.
 
 ## Storing passkeys
