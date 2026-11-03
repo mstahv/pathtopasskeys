@@ -36,7 +36,12 @@ public class SecurityConfiguration {
                     .requestMatchers("/line-awesome/svg/*.svg").permitAll();
         });
 
-        http.oneTimeTokenLogin(withDefaults());
+        // Explicit login page, otherwise Spring Security may serve its generated
+        // default login page at /login instead of our Vaadin LoginView. Setting the
+        // login page also changes the processing URL, so reset it to the default.
+        http.oneTimeTokenLogin(ott -> ott
+                .loginPage("/login")
+                .loginProcessingUrl("/login/ott"));
 
         http.webAuthn(withDefaults());
 

@@ -52,11 +52,14 @@ public class Profile extends VerticalLayout {
         } else {
             passkeys.forEach(passkey -> {
                 add(new HorizontalLayout() {{
-                    add(new Paragraph(passkey.asCredentialRecord().getLabel()));
+                    String label = passkey.asCredentialRecord().getLabel();
+                    add(new Paragraph(label));
                     add(new DeleteButton(() -> {
                         authenticatedUser.deletePasskey(passkey);
                         initView();
-                    }));
+                    }) {{
+                        setAriaLabel("Delete passkey " + label);
+                    }});
                 }});
             });
         }

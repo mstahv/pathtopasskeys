@@ -27,6 +27,16 @@ The app opens to http://localhost:8080. You can login with OTT method first with
 
 TIP: You can use [the EntityExplorer](https://github.com/viritin/entityexplorer) mapped to http://localhost:8080/entityexplorer/ in test runs to inspect the database state during the hacking (development time tooling so no access control configured for that). Note that even though the last step don't support username-password authentication anymore, I left them to the DB because I'm lazy and didn't want to create a new set of test data dump 🤓
 
+## Running the E2E tests
+
+Browser tests for the basic flows (access control, one-time token login, passkey registration, passkey login, sign out) are in `src/test/java/com/example/application/e2e`. They use [Playwright](https://playwright.dev/java/) with Chromium's virtual WebAuthn authenticator in place of a real passkey, and [DramaFinder](https://github.com/parttio/dramafinder) page objects for the Vaadin components. Docker is needed for the PostgreSQL Testcontainer.
+
+```
+mvn verify
+```
+
+Add `-Dheadless=false` to watch the browser.
+
 ## Useful links
 
 - Read the documentation at [vaadin.com/docs](https://vaadin.com/docs).
