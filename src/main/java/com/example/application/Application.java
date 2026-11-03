@@ -1,8 +1,8 @@
 package com.example.application;
 
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
+import com.vaadin.flow.theme.aura.Aura;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -14,7 +14,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  */
 @SpringBootApplication
-@Theme(value = "my-app", variant = Lumo.DARK)
+// Aura is the default theme since Vaadin 25, styles.css (in META-INF/resources) has our few tweaks
+@StyleSheet(Aura.STYLESHEET)
+@StyleSheet("styles.css")
 public class Application implements AppShellConfigurator {
 
     // Note, you should probably start TestApplication class form the src/test/java directory

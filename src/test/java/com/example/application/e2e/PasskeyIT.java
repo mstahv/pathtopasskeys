@@ -24,7 +24,7 @@ public class PasskeyIT extends AbstractE2EIT {
         profile.assertPasskeyCount(1);
         assertEquals(1, authenticator.credentialCount());
 
-        profile.signOut("Emma Executive");
+        profile.signOut();
 
         // Now log in again, this time with the passkey
         loginPage().open().loginWithPasskey();
@@ -57,7 +57,7 @@ public class PasskeyIT extends AbstractE2EIT {
         profile.assertPasskeyCount(1);
         profile.deletePasskey();
         profile.assertPasskeyCount(0);
-        profile.signOut("John Normal");
+        profile.signOut();
 
         // The browser still has the credential, but the server no longer accepts it
         assertEquals(1, authenticator.credentialCount());

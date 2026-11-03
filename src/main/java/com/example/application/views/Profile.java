@@ -73,7 +73,7 @@ public class Profile extends VerticalLayout {
                     })
                     .exceptionally(ex -> {
                         Notification.show("Passkey registration failed: " + ex.getMessage())
-                                .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                                .addThemeVariants(NotificationVariant.ERROR);
                         return null;
                     });
         }));

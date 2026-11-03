@@ -1,6 +1,7 @@
 package com.example.application.e2e;
 
 import org.junit.jupiter.api.Test;
+import org.vaadin.addons.dramafinder.element.ButtonElement;
 
 import java.util.regex.Pattern;
 
@@ -14,6 +15,13 @@ public class LoginIT extends AbstractE2EIT {
     @Test
     public void protectedViewRedirectsToLogin() {
         profilePage().open();
+        loginPage().assertIsShown();
+    }
+
+    @Test
+    public void aboutViewLeadsToLogin() {
+        page.navigate(getUrl() + "/");
+        ButtonElement.getByText(page, "Sign in").click();
         loginPage().assertIsShown();
     }
 
@@ -48,7 +56,7 @@ public class LoginIT extends AbstractE2EIT {
         var profile = profilePage().open();
         profile.assertLoggedInAs("user");
 
-        profile.signOut("John Normal");
+        profile.signOut();
 
         profilePage().open();
         loginPage().assertIsShown();

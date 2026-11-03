@@ -4,12 +4,13 @@ import com.example.application.data.User;
 import com.example.application.security.AuthenticatedUser;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.icon.SvgIcon;
-import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -20,12 +21,8 @@ import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
-import com.vaadin.flow.server.streams.DownloadHandler;
-import com.vaadin.flow.server.streams.DownloadResponse;
-import com.vaadin.flow.server.streams.InputStreamDownloadCallback;
-import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.dom.Style;
 
-import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,14 +52,14 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         toggle.setAriaLabel("Menu toggle");
 
         viewTitle = new H1();
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
+        viewTitle.getStyle().setFontSize("var(--aura-font-size-l)").setMargin("0");
 
         addToNavbar(true, toggle, viewTitle);
     }
 
     private void addDrawerContent() {
         Span appName = new Span("PathToPasskeys");
-        appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
+        appName.getStyle().setFontWeight(Style.FontWeight.BOLDER).setFontSize("var(--aura-font-size-l)");
         Header header = new Header(appName);
 
         Scroller scroller = new Scroller(createNavigation());
@@ -86,38 +83,41 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     }
 
     private Footer createFooter() {
-        Footer layout = new Footer();
+        return new Footer(authenticatedUser.get()
+                .<Component>map(UserInfo::new)
+                .orElseGet(() -> new Anchor("login", "Sign in")));
+    }
 
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.get();
-
-            Avatar avatar = new Avatar(user.getName());
-            avatar.setImageHandler(DownloadHandler.fromInputStream((InputStreamDownloadCallback) downloadEvent -> new DownloadResponse(new ByteArrayInputStream(user.getProfilePicture()),"", "image/png", 1000)));
-            avatar.setThemeName("xsmall");
-            avatar.getElement().setAttribute("tabindex", "-1");
-
-            MenuBar userMenu = new MenuBar();
-            userMenu.setThemeName("tertiary-inline contrast");
-
-            MenuItem userName = userMenu.addItem("");
-            Div div = new Div();
-            div.add(avatar);
-            div.add(user.getName());
-            div.add(new Icon("lumo", "dropdown"));
-            div.addClassNames(LumoUtility.Display.FLEX, LumoUtility.AlignItems.CENTER, LumoUtility.Gap.SMALL);
-            userName.add(div);
-            userName.getSubMenu().addItem("Sign out", e -> {
-                authenticatedUser.logout();
-            });
-
-            layout.add(userMenu);
-        } else {
-            Anchor loginLink = new Anchor("login", "Sign in");
-            layout.add(loginLink);
+    /**
+     * The current user, with a button to sign out. With only one action, a
+     * visible button is easier to find than a menu.
+     */
+    private class UserInfo extends Div {
+        UserInfo(User user) {
+            add(new Avatar(user.getName()) {{
+                setImageHandler(event -> {
+                    event.setContentType("image/jpeg");
+                    event.getOutputStream().write(user.getProfilePicture());
+                });
+                getStyle().setFlexShrink("0");
+            }});
+            add(new Span(user.getName()) {{
+                // Long names are cut with an ellipsis instead of pushing the button out
+                getStyle().setFlexGrow("1").setMinWidth("0")
+                        .setOverflow(Style.Overflow.HIDDEN)
+                        .setWhiteSpace(Style.WhiteSpace.NOWRAP)
+                        .set("text-overflow", "ellipsis");
+            }});
+            add(new Button(VaadinIcon.SIGN_OUT.create(), e -> authenticatedUser.logout()) {{
+                addThemeVariants(ButtonVariant.TERTIARY);
+                setAriaLabel("Sign out");
+                setTooltipText("Sign out");
+            }});
+            setWidthFull();
+            getStyle().setDisplay(Style.Display.FLEX)
+                    .setAlignItems(Style.AlignItems.CENTER)
+                    .setGap("var(--vaadin-gap-s)");
         }
-
-        return layout;
     }
 
     private String getCurrentPageTitle() {

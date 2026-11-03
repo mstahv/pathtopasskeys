@@ -5,8 +5,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import org.vaadin.addons.dramafinder.element.ButtonElement;
 import org.vaadin.addons.dramafinder.element.DialogElement;
-import org.vaadin.addons.dramafinder.element.MenuBarElement;
-import org.vaadin.addons.dramafinder.element.MenuElement;
 import org.vaadin.addons.dramafinder.element.NotificationElement;
 
 import java.util.regex.Pattern;
@@ -57,12 +55,8 @@ public class ProfilePage {
         confirmDialog.assertClosed();
     }
 
-    public void signOut(String fullName) {
-        // The user menu item also contains the avatar, so match on a substring of its name
-        new MenuBarElement(page).getLocator()
-                .getByRole(AriaRole.MENUITEM, new Locator.GetByRoleOptions().setName(fullName))
-                .click();
-        new MenuElement(page).getMenuItemElement("Sign out").click();
+    public void signOut() {
+        ButtonElement.getByText(page, "Sign out").click();
         // After logout, the main layout offers to sign in again
         assertThat(page.getByRole(AriaRole.LINK, new Page.GetByRoleOptions().setName("Sign in"))).isVisible();
     }
