@@ -59,7 +59,10 @@ and drive a Chromium browser, with a virtual authenticator for the passkeys:
 
 ## Production
 
-Build with `mvn package -Pproduction` and run with `java -jar target/quarkus-app/quarkus-run.jar`.
+Build with `mvn package` and run with `java -jar target/quarkus-app/quarkus-run.jar`.
+No production profile is needed: the Vaadin Quarkus extension builds the
+frontend for production itself, and the Vaadin development tools are in the
+`test` scope, which Quarkus uses only in dev mode and tests.
 Passkeys only work over HTTPS (localhost is an exception), on the domain they
 were registered for. See `application.properties` for what to configure: the
 domain, the database and the key that encrypts the login cookie.
