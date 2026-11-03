@@ -18,6 +18,12 @@ public class LoginIT extends AbstractE2EIT {
     }
 
     @Test
+    public void demoAccountsAreListedOnLoginPage() {
+        loginPage().open();
+        assertThat(page.getByText("Demo accounts")).isVisible();
+    }
+
+    @Test
     public void loginWithOneTimeToken() {
         var login = loginPage().open();
         login.loginWithOneTimeToken("user");
