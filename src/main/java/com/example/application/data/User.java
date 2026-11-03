@@ -26,6 +26,12 @@ public class User extends AbstractEntity {
     @Column(length = 1000000)
     private byte[] profilePicture;
 
+    /**
+     * The random WebAuthn id of the user, created when registering the first passkey
+     */
+    @Column(columnDefinition = "bytea")
+    private byte[] webAuthnId;
+
     public String getUsername() {
         return username;
     }
@@ -55,5 +61,11 @@ public class User extends AbstractEntity {
     }
     public void setProfilePicture(byte[] profilePicture) {
         this.profilePicture = profilePicture;
+    }
+    public byte[] getWebAuthnId() {
+        return webAuthnId;
+    }
+    public void setWebAuthnId(byte[] webAuthnId) {
+        this.webAuthnId = webAuthnId;
     }
 }

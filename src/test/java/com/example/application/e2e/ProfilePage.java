@@ -1,8 +1,10 @@
 package com.example.application.e2e;
 
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import org.vaadin.addons.dramafinder.element.ButtonElement;
+import org.vaadin.addons.dramafinder.element.DialogElement;
 import org.vaadin.addons.dramafinder.element.NotificationElement;
 import org.vaadin.addons.dramafinder.element.PasswordFieldElement;
 
@@ -32,6 +34,30 @@ public class ProfilePage {
         assertThat(page).hasURL(Pattern.compile("/profile$"));
         assertThat(page.getByRole(AriaRole.HEADING, new Page.GetByRoleOptions()
                 .setName("Profile: " + username))).isVisible();
+    }
+
+    public void registerPasskey() {
+        ButtonElement.getByText(page, "Register new passkey").click();
+        NotificationElement.getByText(page, "Passkey registered!").assertOpen();
+    }
+
+    public void assertPasskeyCount(int expected) {
+        assertThat(deleteButtons()).hasCount(expected);
+        if (expected == 0) {
+            assertThat(page.getByText("No passkeys registered")).isVisible();
+        }
+    }
+
+    public void deletePasskey() {
+        new ButtonElement(deleteButtons().first()).click();
+        var confirmDialog = new DialogElement(page);
+        confirmDialog.assertOpen();
+        ButtonElement.getByText(confirmDialog.getLocator(), "Delete").click();
+        confirmDialog.assertClosed();
+    }
+
+    private Locator deleteButtons() {
+        return page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Delete passkey"));
     }
 
     public void changePassword(String newPassword) {

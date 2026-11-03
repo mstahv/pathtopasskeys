@@ -14,6 +14,10 @@ import java.net.ServerSocket;
 /**
  * Base class for the browser tests. Starts the whole app (with a PostgreSQL in
  * Testcontainers) and gives each test a fresh Playwright page.
+ * <p>
+ * WebAuthn validates the origin of the browser against the configured one, so
+ * instead of a random port, we pick a free port up front and configure both the
+ * server and the relying party to use it.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @Import(TestcontainersConfiguration.class)
@@ -24,6 +28,8 @@ public abstract class AbstractE2EIT extends AbstractBasePlaywrightIT {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("server.port", () -> PORT);
+        registry.add("webauthn.id", () -> "localhost");
+        registry.add("webauthn.origin", () -> "http://localhost:" + PORT);
         registry.add("vaadin.launch-browser", () -> false);
     }
 

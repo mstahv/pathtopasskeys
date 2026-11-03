@@ -22,7 +22,10 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         setTitle("PathToPasskeys");
         setDescription("Login using user/user or admin/admin");
         setForgotPasswordButtonVisible(false);
-        getFooter().add(new VerticalLayout(new Paragraph("Problems signing in? Try this:"), ottButton) {{
+        getFooter().add(new VerticalLayout(
+                new LoginWithPasskeyButton(),
+                new Paragraph("Problems signing in? Try this:"),
+                ottButton) {{
             setAlignItems(Alignment.CENTER);
         }});
         setOpened(true);

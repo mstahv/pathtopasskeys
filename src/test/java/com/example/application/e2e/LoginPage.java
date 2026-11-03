@@ -85,6 +85,15 @@ public class LoginPage {
         page.waitForURL(url -> !url.contains("/login/ott"));
     }
 
+    /**
+     * Clicks the passkey button. Requires a {@link VirtualAuthenticator} on the page.
+     */
+    public void loginWithPasskey() {
+        ButtonElement.getByText(page, "Use passkey").click();
+        // The ceremony ends with a JS redirect: to the app on success, /login?error on failure
+        page.waitForURL(url -> !url.endsWith("/login"));
+    }
+
     private LoginOverlayElement loginOverlay() {
         return new LoginOverlayElement(page);
     }
