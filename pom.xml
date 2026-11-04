@@ -72,7 +72,7 @@
             <!-- Re-authentication with a passkey before sensitive actions, see SensitiveActionView -->
             <groupId>in.virit</groupId>
             <artifactId>passkey-reauthentication</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
 
         <!-- JPA (with Panache repositories) on PostgreSQL. In dev mode and tests,

@@ -9,6 +9,7 @@ and Spring Security, just built on Quarkus instead:
  * Anybody can **sign up** with a passkey (and gets the USER role)
  * Users register and delete their passkeys in the Profile view
  * Admins can add and delete users
+ * Optional bonus: sensitive actions are **confirmed with a passkey** (fingerprint, face or device PIN), see the "Sensitive action" view
  * Views are protected with the standard `@AnonymousAllowed`, `@PermitAll` and
    `@RolesAllowed` annotations
  * JPA (with Panache repositories) on PostgreSQL
@@ -56,6 +57,15 @@ heavy lifting. Compared to the Spring Security version:
  * **View access control** is Vaadin's `NavigationAccessControl`, the same one
    that Spring Boot apps use. In Quarkus it is enabled with a few lines in
    `NavigationAccessControlSetup`.
+ * **Confirming sensitive actions with a passkey** is optional, you don't need
+   it for a passwordless login. It is for apps that need it, e.g. banking apps,
+   to make sure the same person is still at the keyboard. In the "Sensitive
+   action" view, a logged-in user confirms a (pretend) transfer with their
+   passkey. This uses the
+   [passkey-reauthentication](https://github.com/viritin/passkey-reauthentication)
+   add-on, the same one as in the Spring Boot version, as it doesn't depend on
+   the security framework. `ReauthenticationPasskeys` connects it to the
+   passkeys stored for the WebAuthn extension.
 
 ## Running the E2E tests
 
