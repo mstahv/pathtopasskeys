@@ -40,6 +40,17 @@ public class VirtualAuthenticator {
     }
 
     /**
+     * Simulates whether the user passes the verification (e.g. fingerprint or
+     * device PIN) of the authenticator.
+     */
+    public void setUserVerified(boolean userVerified) {
+        var params = new JsonObject();
+        params.addProperty("authenticatorId", authenticatorId);
+        params.addProperty("isUserVerified", userVerified);
+        cdp.send("WebAuthn.setUserVerified", params);
+    }
+
+    /**
      * @return the number of credentials (passkeys) stored in this authenticator
      */
     public int credentialCount() {

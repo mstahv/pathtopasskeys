@@ -68,6 +68,12 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-security-webauthn</artifactId>
         </dependency>
+        <dependency>
+            <!-- Re-authentication with a passkey before sensitive actions, see SensitiveActionView -->
+            <groupId>in.virit</groupId>
+            <artifactId>passkey-reauthentication</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- JPA (with Panache repositories) on PostgreSQL. In dev mode and tests,
              Quarkus Dev Services start the database in a container automatically. -->
