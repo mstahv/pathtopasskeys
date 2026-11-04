@@ -21,6 +21,23 @@ The [`quarkus` branch](https://github.com/mstahv/pathtopasskeys/tree/quarkus) ha
 
 See also my [year-old post about passkeys](https://vaadin.com/blog/forget-passwords-accessing-webauthn-api-with-vaadin). Compared to that example, this now utilises Spring Security and WebAuthn4J (this was not supported year ago) instead of directly implementing the WebAuthn with Yubico's library.
 
+## Bonus: confirm sensitive actions with a passkey
+
+Once users have passkeys, you can use them for more than logging in. In the "Sensitive action" view (`SensitiveActionView`), a logged-in user has to confirm a (pretend) money transfer with their passkey. A transfer only happens after a fingerprint, face or device PIN check, which proves that the same person is still at the keyboard, not somebody who found the laptop unlocked. Banking apps typically need this, a.k.a. "step-up authentication".
+
+This is **optional**. You don't need it to get rid of passwords, which is why the `path` branch doesn't use it. If your app needs it, it's a few lines with the [passkey-reauthentication](https://github.com/viritin/passkey-reauthentication) add-on (`in.virit:passkey-reauthentication`):
+
+- The add-on shows a dialog telling what is being confirmed, then asks for the passkey.
+- It verifies the response on the server against the user's stored passkeys.
+- It is independent of the security framework, so the Quarkus version uses it too.
+- Here, `ReauthenticationConfiguration` connects it to the passkeys stored for Spring Security.
+
+```java
+reauthentication.runAfterVerification("Transfer 100 € to Bob",
+        () -> bankService.transfer(...),
+        e -> Notification.show("Transfer cancelled: " + e.getMessage()));
+```
+
 ## Storing passkeys
 
 By default, Spring Security keeps passkeys in memory, which is never what you want: they are lost on restart and don't work in a cluster. You need to provide implementations of two interfaces:
